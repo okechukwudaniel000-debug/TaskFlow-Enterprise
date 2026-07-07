@@ -3,14 +3,30 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { 
   User, Shield, Key, Bell, Globe, Sparkles, Check, CheckCircle, RefreshCw 
 } from "lucide-react";
 import { useTaskFlow } from "../../contexts/TaskFlowContext";
+import { useAuthStore } from "../../features/auth/authStore";
 
 export const UserProfileSettings: React.FC = () => {
   const { currentUser, updateProfile, theme, setThemePreference } = useTaskFlow();
+  const { sessions, securityLogs, getSessions, revokeSession, getSecurityLogs } = useAuthStore();
+
+  useEffect(() => {
+    getSessions();
+    getSecurityLogs();
+  }, []);
+
+  const handleRevokeSession = async (sessionId: string) => {
+    try {
+      await revokeSession(sessionId);
+      setSuccessMsg("Active device session successfully terminated.");
+    } catch (err: any) {
+      setErrorMsg(err?.message || "Failed to terminate active session.");
+    }
+  };
 
   // Profile Form state
   const [name, setName] = useState(currentUser?.name || "");
@@ -249,6 +265,102 @@ export const UserProfileSettings: React.FC = () => {
                 Update Password Key
               </button>
             </form>
+          </div>
+
+          {/* Active Sessions & Security Logs */}
+          <div className="bg-[#151515] border border-[#262626] rounded-xl p-6 shadow-sm space-y-5">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-bold text-white uppercase tracking-wider font-mono flex items-center gap-2">
+                <Shield className="w-4 h-4 text-emerald-400" /> Active Sessions & Audit History
+              </h3>
+              <button
+                type="button"
+                onClick={async () => {
+                  setIsLoading(true);
+                  try {
+                    await getSessions();
+                    await getSecurityLogs();
+                    setSuccessMsg("Secured sessions and audit trail synced from keyspace.");
+                  } catch (e: any) {
+                    setErrorMsg("Failed to synchronize session telemetry.");
+                  } finally {
+                    setIsLoading(false);
+                  }
+                }}
+                disabled={isLoading}
+                className="text-[10px] text-blue-400 hover:text-blue-300 font-bold uppercase tracking-wider flex items-center gap-1 cursor-pointer disabled:opacity-50"
+              >
+                <RefreshCw className={`w-3 h-3 ${isLoading ? "animate-spin" : ""}`} /> Refresh Telemetry
+              </button>
+            </div>
+
+            {/* Sessions List */}
+            <div className="space-y-3">
+              <h4 className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Active Device Sessions ({sessions.length})</h4>
+              {sessions.length === 0 ? (
+                <p className="text-xs text-zinc-500 italic font-mono">No active sessions retrieved. Click refresh.</p>
+              ) : (
+                <div className="space-y-2">
+                  {sessions.map((sess) => (
+                    <div key={sess.sessionId} className="p-3 bg-[#0b0b0b] border border-[#262626] rounded-lg flex items-center justify-between gap-3 text-xs">
+                      <div className="space-y-1 min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="font-semibold text-zinc-200 truncate max-w-[200px]" title={sess.userAgent}>
+                            {sess.userAgent ? sess.userAgent.split(" ")[0] || "Unknown Client" : "Unknown Client"}
+                          </span>
+                          <span className="text-[9px] text-zinc-500 font-mono bg-zinc-900 px-1.5 py-0.2 rounded border border-zinc-800">
+                            IP: {sess.ip || "127.0.0.1"}
+                          </span>
+                        </div>
+                        <p className="text-[10px] text-zinc-500 font-mono">
+                          Last Active: {new Date(sess.lastActive).toLocaleString()}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleRevokeSession(sess.sessionId)}
+                        className="text-[10px] text-red-400 hover:text-red-300 font-semibold px-2 py-1 bg-red-950/20 border border-red-900/30 rounded cursor-pointer transition-all shrink-0"
+                      >
+                        Revoke
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Security Audit Logs */}
+            <div className="space-y-3 border-t border-[#262626] pt-4">
+              <h4 className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Audit Trail (Latest 10 Logs)</h4>
+              {securityLogs.length === 0 ? (
+                <p className="text-xs text-zinc-500 italic font-mono">No security logs recorded in database.</p>
+              ) : (
+                <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+                  {securityLogs.slice(0, 10).map((log) => (
+                    <div key={log.id} className="p-2.5 bg-[#0b0b0b] border border-[#262626]/60 rounded-md text-[11px] font-mono flex flex-col gap-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className={`font-bold uppercase tracking-wide text-[9px] px-1 py-0.2 rounded border ${
+                          log.action.includes("SUCCESS") || log.action === "REGISTRATION" || log.action === "EMAIL_VERIFICATION"
+                            ? "text-emerald-400 bg-emerald-950/10 border-emerald-900/30"
+                            : log.action.includes("FAILED") || log.action === "LOCKOUT" || log.action === "SECURITY_VIOLATION_REUSE"
+                            ? "text-red-400 bg-red-950/10 border-red-900/30"
+                            : "text-amber-400 bg-amber-950/10 border-amber-900/30"
+                        }`}>
+                          {log.action}
+                        </span>
+                        <span className="text-zinc-600 text-[9px] shrink-0">{new Date(log.timestamp).toLocaleTimeString()}</span>
+                      </div>
+                      <p className="text-zinc-300 text-[11px] leading-normal">{log.details}</p>
+                      {log.ip && (
+                        <span className="text-[9px] text-zinc-600 truncate">
+                          IP: {log.ip} | Client: {log.userAgent ? log.userAgent.substring(0, 50) : "unknown"}
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
         </div>

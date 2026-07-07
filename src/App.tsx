@@ -16,6 +16,7 @@ import { CommandPalette } from "./components/CommandPalette";
 import { CreateTaskModal } from "./components/CreateTaskModal";
 import { TaskDrawer } from "./components/TaskDrawer";
 import { TaskStatus } from "./types";
+import { useAuthStore } from "./features/auth/authStore";
 
 import { 
   Layers, LayoutDashboard, Kanban, Library, BarChart3, Users, Settings, 
@@ -26,6 +27,12 @@ function AppContent() {
   const { 
     currentUser, logout, workspaces, currentWorkspace, setCurrentWorkspaceById, createWorkspace, theme
   } = useTaskFlow();
+
+  const { initializeAuth, isCheckingSession } = useAuthStore();
+
+  useEffect(() => {
+    initializeAuth();
+  }, [initializeAuth]);
 
   // Navigation / View state
   const [activeView, setActiveView] = useState<string>("dashboard");
@@ -55,6 +62,18 @@ function AppContent() {
     window.addEventListener("keydown", handleGlobalShortcuts);
     return () => window.removeEventListener("keydown", handleGlobalShortcuts);
   }, []);
+
+  // Secure Loading Gate
+  if (isCheckingSession) {
+    return (
+      <div className="min-h-screen bg-[#090909] flex flex-col items-center justify-center p-4">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-2 border-t-blue-500 border-neutral-800 rounded-full animate-spin" />
+          <span className="text-[10px] font-mono tracking-widest text-zinc-500 uppercase">Synchronizing keyspace...</span>
+        </div>
+      </div>
+    );
+  }
 
   // If user is logged out, serve full-page Login/Register panel
   if (!currentUser) {

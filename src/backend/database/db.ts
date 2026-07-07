@@ -9,12 +9,44 @@ import { INITIAL_NOTIFICATIONS } from "../../features/notifications/notification
 
 const DB_FILE_PATH = path.join(process.cwd(), "tf_database.json");
 
+export interface AuthProfile {
+  userId: string;
+  passwordHash: string;
+  isVerified: boolean;
+  verificationToken?: string;
+  verificationTokenExpires?: string;
+  passwordResetToken?: string;
+  passwordResetExpires?: string;
+  loginAttempts: number;
+  lockUntil?: string | null;
+  refreshTokens: string[];
+  sessions: {
+    sessionId: string;
+    userAgent?: string;
+    ip?: string;
+    lastActive: string;
+  }[];
+}
+
+export interface SecurityAuditLog {
+  id: string;
+  userId?: string;
+  email?: string;
+  action: string;
+  ip?: string;
+  userAgent?: string;
+  timestamp: string;
+  details: string;
+}
+
 interface DatabaseSchema {
   users: User[];
   workspaces: Workspace[];
   projects: Project[];
   tasks: Task[];
   notifications: Notification[];
+  authProfiles: AuthProfile[];
+  auditLogs: SecurityAuditLog[];
 }
 
 class DatabaseManager {
@@ -27,6 +59,8 @@ class DatabaseManager {
       projects: INITIAL_PROJECTS,
       tasks: INITIAL_TASKS,
       notifications: INITIAL_NOTIFICATIONS,
+      authProfiles: [],
+      auditLogs: [],
     };
     this.load();
   }
@@ -43,6 +77,8 @@ class DatabaseManager {
             projects: Array.isArray(parsed.projects) ? parsed.projects : INITIAL_PROJECTS,
             tasks: Array.isArray(parsed.tasks) ? parsed.tasks : INITIAL_TASKS,
             notifications: Array.isArray(parsed.notifications) ? parsed.notifications : INITIAL_NOTIFICATIONS,
+            authProfiles: Array.isArray(parsed.authProfiles) ? parsed.authProfiles : [],
+            auditLogs: Array.isArray(parsed.auditLogs) ? parsed.auditLogs : [],
           };
           console.log("Database successfully loaded from:", DB_FILE_PATH);
         }
@@ -81,6 +117,14 @@ class DatabaseManager {
   // Notifications CRUD
   get notifications() { return this.data.notifications; }
   set notifications(val: Notification[]) { this.data.notifications = val; this.save(); }
+
+  // AuthProfiles CRUD
+  get authProfiles() { return this.data.authProfiles; }
+  set authProfiles(val: AuthProfile[]) { this.data.authProfiles = val; this.save(); }
+
+  // AuditLogs CRUD
+  get auditLogs() { return this.data.auditLogs; }
+  set auditLogs(val: SecurityAuditLog[]) { this.data.auditLogs = val; this.save(); }
 }
 
 export const db = new DatabaseManager();
