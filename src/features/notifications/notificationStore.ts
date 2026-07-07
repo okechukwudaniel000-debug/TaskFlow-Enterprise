@@ -1,6 +1,13 @@
 import { create } from "zustand";
 import { Notification } from "../../types";
 
+const safeLocalStorage = typeof window !== "undefined" && typeof localStorage !== "undefined" ? localStorage : {
+  getItem: (key: string) => null,
+  setItem: (key: string, value: string) => {},
+  removeItem: (key: string) => {},
+  clear: () => {}
+};
+
 export const INITIAL_NOTIFICATIONS: Notification[] = [
   {
     id: "not-1",
@@ -34,13 +41,13 @@ export const useNotificationStore = create<NotificationState>((set, get) => {
   let initialNotifications = INITIAL_NOTIFICATIONS;
 
   try {
-    const saved = localStorage.getItem("tf_notifications");
+    const saved = safeLocalStorage.getItem("tf_notifications");
     if (saved && saved !== "undefined" && saved !== "null") {
       const parsed = JSON.parse(saved);
       if (Array.isArray(parsed)) initialNotifications = parsed;
     }
   } catch (e) {
-    console.warn("localStorage read blocked in notificationStore:", e);
+    console.warn("safeLocalStorage read blocked in notificationStore:", e);
   }
 
   return {
@@ -50,9 +57,9 @@ export const useNotificationStore = create<NotificationState>((set, get) => {
       const updated = [notif, ...notifications];
       set({ notifications: updated });
       try {
-        localStorage.setItem("tf_notifications", JSON.stringify(updated));
+        safeLocalStorage.setItem("tf_notifications", JSON.stringify(updated));
       } catch (e) {
-        console.warn("localStorage sync blocked:", e);
+        console.warn("safeLocalStorage sync blocked:", e);
       }
     },
     markNotificationAsRead: (id: string) => {
@@ -60,9 +67,9 @@ export const useNotificationStore = create<NotificationState>((set, get) => {
       const updated = notifications.map(n => n.id === id ? { ...n, isRead: true } : n);
       set({ notifications: updated });
       try {
-        localStorage.setItem("tf_notifications", JSON.stringify(updated));
+        safeLocalStorage.setItem("tf_notifications", JSON.stringify(updated));
       } catch (e) {
-        console.warn("localStorage sync blocked:", e);
+        console.warn("safeLocalStorage sync blocked:", e);
       }
     },
     markAllNotificationsAsRead: () => {
@@ -70,9 +77,9 @@ export const useNotificationStore = create<NotificationState>((set, get) => {
       const updated = notifications.map(n => ({ ...n, isRead: true }));
       set({ notifications: updated });
       try {
-        localStorage.setItem("tf_notifications", JSON.stringify(updated));
+        safeLocalStorage.setItem("tf_notifications", JSON.stringify(updated));
       } catch (e) {
-        console.warn("localStorage sync blocked:", e);
+        console.warn("safeLocalStorage sync blocked:", e);
       }
     },
     clearNotification: (id: string) => {
@@ -80,9 +87,9 @@ export const useNotificationStore = create<NotificationState>((set, get) => {
       const updated = notifications.filter(n => n.id !== id);
       set({ notifications: updated });
       try {
-        localStorage.setItem("tf_notifications", JSON.stringify(updated));
+        safeLocalStorage.setItem("tf_notifications", JSON.stringify(updated));
       } catch (e) {
-        console.warn("localStorage sync blocked:", e);
+        console.warn("safeLocalStorage sync blocked:", e);
       }
     }
   };

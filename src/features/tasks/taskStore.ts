@@ -14,6 +14,13 @@ import {
 import { useAuthStore } from "../auth/authStore";
 import { useNotificationStore } from "../notifications/notificationStore";
 
+const safeLocalStorage = typeof window !== "undefined" && typeof localStorage !== "undefined" ? localStorage : {
+  getItem: (key: string) => null,
+  setItem: (key: string, value: string) => {},
+  removeItem: (key: string) => {},
+  clear: () => {}
+};
+
 export const INITIAL_TASKS: Task[] = [
   {
     id: "task-101",
@@ -215,21 +222,21 @@ export const useTaskStore = create<TaskState>((set, get) => {
   let initialTasks = INITIAL_TASKS;
 
   try {
-    const saved = localStorage.getItem("tf_tasks");
+    const saved = safeLocalStorage.getItem("tf_tasks");
     if (saved && saved !== "undefined" && saved !== "null") {
       const parsed = JSON.parse(saved);
       if (Array.isArray(parsed)) initialTasks = parsed;
     }
   } catch (e) {
-    console.warn("localStorage read blocked in taskStore:", e);
+    console.warn("safeLocalStorage read blocked in taskStore:", e);
   }
 
   const persistTasks = (updated: Task[]) => {
     set({ tasks: updated });
     try {
-      localStorage.setItem("tf_tasks", JSON.stringify(updated));
+      safeLocalStorage.setItem("tf_tasks", JSON.stringify(updated));
     } catch (e) {
-      console.warn("localStorage sync blocked:", e);
+      console.warn("safeLocalStorage sync blocked:", e);
     }
   };
 

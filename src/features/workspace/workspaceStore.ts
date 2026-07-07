@@ -2,6 +2,13 @@ import { create } from "zustand";
 import { Workspace, UserRole } from "../../types";
 import { useAuthStore } from "../auth/authStore";
 
+const safeLocalStorage = typeof window !== "undefined" && typeof localStorage !== "undefined" ? localStorage : {
+  getItem: (key: string) => null,
+  setItem: (key: string, value: string) => {},
+  removeItem: (key: string) => {},
+  clear: () => {}
+};
+
 export const INITIAL_WORKSPACES: Workspace[] = [
   {
     id: "ws-1",
@@ -34,13 +41,13 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => {
   let initialWorkspaces = INITIAL_WORKSPACES;
 
   try {
-    const saved = localStorage.getItem("tf_workspaces");
+    const saved = safeLocalStorage.getItem("tf_workspaces");
     if (saved && saved !== "undefined" && saved !== "null") {
       const parsed = JSON.parse(saved);
       if (Array.isArray(parsed)) initialWorkspaces = parsed;
     }
   } catch (e) {
-    console.warn("localStorage read blocked in workspaceStore:", e);
+    console.warn("safeLocalStorage read blocked in workspaceStore:", e);
   }
 
   // Set default active workspace on load (first one)
@@ -71,9 +78,9 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => {
       const updated = [...workspaces, newWs];
       set({ workspaces: updated, currentWorkspace: newWs });
       try {
-        localStorage.setItem("tf_workspaces", JSON.stringify(updated));
+        safeLocalStorage.setItem("tf_workspaces", JSON.stringify(updated));
       } catch (e) {
-        console.warn("localStorage sync blocked:", e);
+        console.warn("safeLocalStorage sync blocked:", e);
       }
     },
     editWorkspace: (id: string, name: string, description: string) => {
@@ -84,9 +91,9 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => {
         set({ currentWorkspace: { ...currentWorkspace, name, description } });
       }
       try {
-        localStorage.setItem("tf_workspaces", JSON.stringify(updated));
+        safeLocalStorage.setItem("tf_workspaces", JSON.stringify(updated));
       } catch (e) {
-        console.warn("localStorage sync blocked:", e);
+        console.warn("safeLocalStorage sync blocked:", e);
       }
     },
     deleteWorkspace: (id: string) => {
@@ -97,9 +104,9 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => {
         set({ currentWorkspace: updated.length > 0 ? updated[0] : null });
       }
       try {
-        localStorage.setItem("tf_workspaces", JSON.stringify(updated));
+        safeLocalStorage.setItem("tf_workspaces", JSON.stringify(updated));
       } catch (e) {
-        console.warn("localStorage sync blocked:", e);
+        console.warn("safeLocalStorage sync blocked:", e);
       }
     },
     inviteWorkspaceMember: (workspaceId: string, email: string, role: UserRole) => {
@@ -123,9 +130,9 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => {
         const updatedUsers = [...authState.users, existingUser];
         useAuthStore.setState({ users: updatedUsers });
         try {
-          localStorage.setItem("tf_users", JSON.stringify(updatedUsers));
+          safeLocalStorage.setItem("tf_users", JSON.stringify(updatedUsers));
         } catch (e) {
-          console.warn("localStorage sync blocked:", e);
+          console.warn("safeLocalStorage sync blocked:", e);
         }
       }
 
@@ -157,9 +164,9 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => {
       }
 
       try {
-        localStorage.setItem("tf_workspaces", JSON.stringify(updatedWorkspaces));
+        safeLocalStorage.setItem("tf_workspaces", JSON.stringify(updatedWorkspaces));
       } catch (e) {
-        console.warn("localStorage sync blocked:", e);
+        console.warn("safeLocalStorage sync blocked:", e);
       }
     },
     removeWorkspaceMember: (workspaceId: string, userId: string) => {
@@ -186,9 +193,9 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => {
       }
 
       try {
-        localStorage.setItem("tf_workspaces", JSON.stringify(updatedWorkspaces));
+        safeLocalStorage.setItem("tf_workspaces", JSON.stringify(updatedWorkspaces));
       } catch (e) {
-        console.warn("localStorage sync blocked:", e);
+        console.warn("safeLocalStorage sync blocked:", e);
       }
     }
   };

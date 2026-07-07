@@ -1,6 +1,13 @@
 import { create } from "zustand";
 import { User, UserRole } from "../../types";
 
+const safeLocalStorage = typeof window !== "undefined" && typeof localStorage !== "undefined" ? localStorage : {
+  getItem: (key: string) => null,
+  setItem: (key: string, value: string) => {},
+  removeItem: (key: string) => {},
+  clear: () => {}
+};
+
 export const MOCK_USERS: User[] = [
   {
     id: "user-1",
@@ -116,7 +123,7 @@ export const apiFetch = async (url: string, options: RequestInit = {}): Promise<
   const response = await fetch(url, { ...options, headers });
   
   if (response.status === 401) {
-    const refreshToken = localStorage.getItem("tf_refresh_token");
+    const refreshToken = safeLocalStorage.getItem("tf_refresh_token");
     if (refreshToken) {
       try {
         const refreshRes = await fetch("/api/auth/refresh", {
@@ -129,7 +136,7 @@ export const apiFetch = async (url: string, options: RequestInit = {}): Promise<
           const bodyJson = await refreshRes.json();
           if (bodyJson.success && bodyJson.data) {
             useAuthStore.setState({ accessToken: bodyJson.data.accessToken });
-            localStorage.setItem("tf_refresh_token", bodyJson.data.refreshToken);
+            safeLocalStorage.setItem("tf_refresh_token", bodyJson.data.refreshToken);
             
             // Retry the original fetch
             headers.set("Authorization", `Bearer ${bodyJson.data.accessToken}`);
@@ -154,17 +161,17 @@ export const useAuthStore = create<AuthState>((set, get) => {
   let initialUsers: User[] = MOCK_USERS;
 
   try {
-    const savedUser = localStorage.getItem("tf_current_user");
+    const savedUser = safeLocalStorage.getItem("tf_current_user");
     if (savedUser && savedUser !== "undefined" && savedUser !== "null") {
       initialCurrentUser = JSON.parse(savedUser);
     }
-    const savedUsers = localStorage.getItem("tf_users");
+    const savedUsers = safeLocalStorage.getItem("tf_users");
     if (savedUsers && savedUsers !== "undefined" && savedUsers !== "null") {
       const parsed = JSON.parse(savedUsers);
       if (Array.isArray(parsed)) initialUsers = parsed;
     }
   } catch (e) {
-    console.warn("localStorage read blocked in authStore initialization:", e);
+    console.warn("safeLocalStorage read blocked in authStore initialization:", e);
   }
 
   return {
@@ -190,15 +197,15 @@ export const useAuthStore = create<AuthState>((set, get) => {
 
         const { user, accessToken, refreshToken } = bodyJson.data;
         set({ currentUser: user, accessToken });
-        localStorage.setItem("tf_refresh_token", refreshToken);
-        localStorage.setItem("tf_current_user", JSON.stringify(user));
+        safeLocalStorage.setItem("tf_refresh_token", refreshToken);
+        safeLocalStorage.setItem("tf_current_user", JSON.stringify(user));
 
         // Sync local user list cache
         const { users } = get();
         if (!users.some(u => u.id === user.id)) {
           const updated = [...users, user];
           set({ users: updated });
-          localStorage.setItem("tf_users", JSON.stringify(updated));
+          safeLocalStorage.setItem("tf_users", JSON.stringify(updated));
         }
 
         return true;
@@ -224,8 +231,8 @@ export const useAuthStore = create<AuthState>((set, get) => {
 
         const { user, accessToken, refreshToken } = bodyJson.data;
         set({ currentUser: user, accessToken });
-        localStorage.setItem("tf_refresh_token", refreshToken);
-        localStorage.setItem("tf_current_user", JSON.stringify(user));
+        safeLocalStorage.setItem("tf_refresh_token", refreshToken);
+        safeLocalStorage.setItem("tf_current_user", JSON.stringify(user));
 
         return true;
       } catch (err: any) {
@@ -235,7 +242,7 @@ export const useAuthStore = create<AuthState>((set, get) => {
     },
 
     logout: async () => {
-      const refreshToken = localStorage.getItem("tf_refresh_token");
+      const refreshToken = safeLocalStorage.getItem("tf_refresh_token");
       if (refreshToken && get().accessToken) {
         try {
           await fetch("/api/auth/logout", {
@@ -252,8 +259,8 @@ export const useAuthStore = create<AuthState>((set, get) => {
       }
 
       set({ currentUser: null, accessToken: null, sessions: [], securityLogs: [] });
-      localStorage.removeItem("tf_refresh_token");
-      localStorage.removeItem("tf_current_user");
+      safeLocalStorage.removeItem("tf_refresh_token");
+      safeLocalStorage.removeItem("tf_current_user");
     },
 
     updateProfile: async (updatedData: Partial<User>) => {
@@ -393,7 +400,7 @@ export const useAuthStore = create<AuthState>((set, get) => {
 
     initializeAuth: async () => {
       set({ isCheckingSession: true });
-      const refreshToken = localStorage.getItem("tf_refresh_token");
+      const refreshToken = safeLocalStorage.getItem("tf_refresh_token");
 
       if (refreshToken) {
         try {
@@ -407,7 +414,7 @@ export const useAuthStore = create<AuthState>((set, get) => {
           if (response.ok && bodyJson.success && bodyJson.data) {
             const { accessToken, refreshToken: newRefreshToken } = bodyJson.data;
             set({ accessToken });
-            localStorage.setItem("tf_refresh_token", newRefreshToken);
+            safeLocalStorage.setItem("tf_refresh_token", newRefreshToken);
 
             // Fetch me profile details with newly acquired access token
             const profileRes = await fetch("/api/auth/me", {
@@ -416,13 +423,13 @@ export const useAuthStore = create<AuthState>((set, get) => {
             const profileJson = await profileRes.json();
             if (profileRes.ok && profileJson.success && profileJson.data) {
               set({ currentUser: profileJson.data });
-              localStorage.setItem("tf_current_user", JSON.stringify(profileJson.data));
+              safeLocalStorage.setItem("tf_current_user", JSON.stringify(profileJson.data));
             }
           } else {
             // Clean up invalid session on failure
             set({ currentUser: null, accessToken: null });
-            localStorage.removeItem("tf_refresh_token");
-            localStorage.removeItem("tf_current_user");
+            safeLocalStorage.removeItem("tf_refresh_token");
+            safeLocalStorage.removeItem("tf_current_user");
           }
         } catch (e) {
           console.warn("Silent session restore error:", e);

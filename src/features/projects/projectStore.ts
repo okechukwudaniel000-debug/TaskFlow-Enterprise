@@ -4,6 +4,13 @@ import { useWorkspaceStore } from "../workspace/workspaceStore";
 import { useTaskStore } from "../tasks/taskStore";
 import { useAuthStore } from "../auth/authStore";
 
+const safeLocalStorage = typeof window !== "undefined" && typeof localStorage !== "undefined" ? localStorage : {
+  getItem: (key: string) => null,
+  setItem: (key: string, value: string) => {},
+  removeItem: (key: string) => {},
+  clear: () => {}
+};
+
 export const INITIAL_PROJECTS: Project[] = [
   {
     id: "proj-1",
@@ -64,13 +71,13 @@ export const useProjectStore = create<ProjectState>((set, get) => {
   let initialProjects = INITIAL_PROJECTS;
 
   try {
-    const saved = localStorage.getItem("tf_projects");
+    const saved = safeLocalStorage.getItem("tf_projects");
     if (saved && saved !== "undefined" && saved !== "null") {
       const parsed = JSON.parse(saved);
       if (Array.isArray(parsed)) initialProjects = parsed;
     }
   } catch (e) {
-    console.warn("localStorage read blocked in projectStore:", e);
+    console.warn("safeLocalStorage read blocked in projectStore:", e);
   }
 
   return {
@@ -107,9 +114,9 @@ export const useProjectStore = create<ProjectState>((set, get) => {
       const updated = [...projects, newProj];
       set({ projects: updated });
       try {
-        localStorage.setItem("tf_projects", JSON.stringify(updated));
+        safeLocalStorage.setItem("tf_projects", JSON.stringify(updated));
       } catch (e) {
-        console.warn("localStorage sync blocked:", e);
+        console.warn("safeLocalStorage sync blocked:", e);
       }
     },
     editProject: (id: string, updatedData: Partial<Project>) => {
@@ -120,9 +127,9 @@ export const useProjectStore = create<ProjectState>((set, get) => {
         set({ currentProject: { ...currentProject, ...updatedData } });
       }
       try {
-        localStorage.setItem("tf_projects", JSON.stringify(updated));
+        safeLocalStorage.setItem("tf_projects", JSON.stringify(updated));
       } catch (e) {
-        console.warn("localStorage sync blocked:", e);
+        console.warn("safeLocalStorage sync blocked:", e);
       }
     },
     archiveProject: (id: string) => {
@@ -133,9 +140,9 @@ export const useProjectStore = create<ProjectState>((set, get) => {
         set({ currentProject: { ...currentProject, isArchived: true } });
       }
       try {
-        localStorage.setItem("tf_projects", JSON.stringify(updated));
+        safeLocalStorage.setItem("tf_projects", JSON.stringify(updated));
       } catch (e) {
-        console.warn("localStorage sync blocked:", e);
+        console.warn("safeLocalStorage sync blocked:", e);
       }
     },
     duplicateProject: (id: string) => {
@@ -152,9 +159,9 @@ export const useProjectStore = create<ProjectState>((set, get) => {
       const updated = [...projects, duplicate];
       set({ projects: updated });
       try {
-        localStorage.setItem("tf_projects", JSON.stringify(updated));
+        safeLocalStorage.setItem("tf_projects", JSON.stringify(updated));
       } catch (e) {
-        console.warn("localStorage sync blocked:", e);
+        console.warn("safeLocalStorage sync blocked:", e);
       }
 
       // Trigger duplication of associated tasks in the taskStore
@@ -168,9 +175,9 @@ export const useProjectStore = create<ProjectState>((set, get) => {
         set({ currentProject: { ...currentProject, isFavorite: !currentProject.isFavorite } });
       }
       try {
-        localStorage.setItem("tf_projects", JSON.stringify(updated));
+        safeLocalStorage.setItem("tf_projects", JSON.stringify(updated));
       } catch (e) {
-        console.warn("localStorage sync blocked:", e);
+        console.warn("safeLocalStorage sync blocked:", e);
       }
     }
   };
