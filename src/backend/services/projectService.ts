@@ -7,7 +7,7 @@ export class ProjectService {
     return await projectRepository.getAll();
   }
 
-  async createProject(name: string, description: string, color: string, icon: string, template: string, workspaceId: string): Promise<Project> {
+  async createProject(name: string, description: string, color: string, icon: string, template: string, workspaceId: string, ownerId: string = "user-1"): Promise<Project> {
     const newProj: Project = {
       id: `proj-${Date.now()}`,
       name,
@@ -19,7 +19,8 @@ export class ProjectService {
       isFavorite: false,
       template,
       progress: 0,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      ownerId
     };
     return await projectRepository.create(newProj);
   }
@@ -46,7 +47,8 @@ export class ProjectService {
       source.color,
       source.icon,
       source.template,
-      source.workspaceId
+      source.workspaceId,
+      source.ownerId
     );
 
     // Duplicate all associated tasks as well

@@ -7,13 +7,14 @@ export class WorkspaceService {
     return await workspaceRepository.getAll();
   }
 
-  async createWorkspace(name: string, description: string, ownerId: string): Promise<Workspace> {
+  async createWorkspace(name: string, description: string, ownerId: string, organizationId: string = "org-1"): Promise<Workspace> {
     const newWs: Workspace = {
       id: `ws-${Date.now()}`,
       name,
       description,
       ownerId,
-      members: [{ userId: ownerId, role: UserRole.ADMIN }]
+      members: [{ userId: ownerId, role: UserRole.ADMIN }],
+      organizationId
     };
     return await workspaceRepository.create(newWs);
   }

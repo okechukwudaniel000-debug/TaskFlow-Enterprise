@@ -28,6 +28,14 @@ router.post("/:id/checklist/:itemId/toggle", taskController.toggleChecklistItem)
 router.post("/:id/attachments", RequestValidator.validateBody(["name", "size", "url"]), taskController.addAttachment);
 router.delete("/:id/attachments/:attachmentId", taskController.removeAttachment);
 
+// Enhanced lifecycle telemetry & sprints
+router.post("/:id/time-logs", RequestValidator.validateBody(["durationMinutes"]), taskController.logTime);
+router.post("/:id/watchers", taskController.addWatcher);
+router.delete("/:id/watchers/:userId", taskController.removeWatcher);
+router.post("/:id/dependencies", RequestValidator.validateBody(["dependsOnTaskId"]), taskController.addDependency);
+router.delete("/:id/dependencies/:dependsOnTaskId", taskController.removeDependency);
+router.post("/:id/sprint", taskController.linkSprint);
+
 // Bulk ops
 router.post("/bulk-update", RequestValidator.validateBody(["taskIds", "status"]), taskController.bulkUpdate);
 

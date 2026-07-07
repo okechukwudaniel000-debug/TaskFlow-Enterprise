@@ -1,5 +1,6 @@
 import { taskRepository } from "../repositories/taskRepository";
 import { userRepository } from "../repositories/userRepository";
+import { automationRuleRepository } from "../repositories/automationRuleRepository";
 import { backendEvents } from "../events/eventEmitter";
 import { 
   Task, 
@@ -9,12 +10,70 @@ import {
   Attachment, 
   ActivityAction, 
   TaskStatus, 
-  TaskPriority 
+  TaskPriority,
+  PriorityHistoryItem,
+  StatusHistoryItem,
+  TimeLog
 } from "../../types";
 
 export class TaskService {
   async getTasks(): Promise<Task[]> {
     return await taskRepository.getAll();
+  }
+
+  async executeAutomations(task: Task, trigger: "STATUS_CHANGED" | "TASK_CREATED" | "PRIORITY_CHANGED", triggerValue: string) {
+    try {
+      const activeRules = await automationRuleRepository.getByWorkspace(task.workspaceId);
+      const matchingRules = activeRules.filter(r => r.isActive && r.trigger === trigger && r.triggerValue === triggerValue);
+
+      for (const rule of matchingRules) {
+        console.log(`Executing automation rule '${rule.name}' for task '${task.title}'`);
+        
+        if (rule.action === "AUTO_ASSIGN" && rule.actionValue) {
+          if (task.assigneeId !== rule.actionValue) {
+            task.assigneeId = rule.actionValue;
+            await taskRepository.update(task.id, { assigneeId: rule.actionValue });
+            backendEvents.logActivity(
+              task.id,
+              "system",
+              ActivityAction.ASSIGNEE_CHANGED,
+              `automatically reassigned task via automation rule: "${rule.name}"`
+            );
+          }
+        } else if (rule.action === "SET_PRIORITY" && rule.actionValue) {
+          if (task.priority !== rule.actionValue) {
+            const newPri = rule.actionValue as TaskPriority;
+            const updatedHistory = [...(task.priorityHistory || []), {
+              priority: newPri,
+              changedBy: "system",
+              changedAt: new Date().toISOString()
+            }];
+            task.priority = newPri;
+            task.priorityHistory = updatedHistory;
+            await taskRepository.update(task.id, { priority: newPri, priorityHistory: updatedHistory });
+            backendEvents.logActivity(
+              task.id,
+              "system",
+              ActivityAction.PRIORITY_CHANGED,
+              `automatically updated priority to ${newPri} via automation rule: "${rule.name}"`
+            );
+          }
+        } else if (rule.action === "ADD_COMMENT" && rule.actionValue) {
+          await this.addComment(task.id, rule.actionValue, "user-1");
+        } else if (rule.action === "SEND_NOTIFICATION" && rule.actionValue) {
+          if (task.assigneeId) {
+            backendEvents.sendNotification(
+              task.assigneeId,
+              "Automation Alert",
+              `Rule '${rule.name}' action: ${rule.actionValue}`,
+              "general"
+            );
+          }
+        }
+      }
+    } catch (e) {
+      console.error("Failed to execute automations:", e);
+    }
   }
 
   async createTask(taskData: Omit<Task, "id" | "createdAt" | "updatedAt" | "comments" | "activityTimeline">, creatorId: string): Promise<Task> {
@@ -36,6 +95,23 @@ export class TaskService {
           createdAt: new Date().toISOString()
         }
       ],
+      watchers: taskData.watchers || [],
+      dependencies: taskData.dependencies || [],
+      priorityHistory: [
+        {
+          priority: taskData.priority,
+          changedBy: creatorId,
+          changedAt: new Date().toISOString()
+        }
+      ],
+      statusHistory: [
+        {
+          status: taskData.status,
+          changedBy: creatorId,
+          changedAt: new Date().toISOString()
+        }
+      ],
+      timeTracking: [],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
@@ -53,6 +129,9 @@ export class TaskService {
       );
     }
 
+    // Trigger TASK_CREATED automation
+    await this.executeAutomations(task, "TASK_CREATED", "");
+
     return task;
   }
 
@@ -63,8 +142,18 @@ export class TaskService {
     const modifier = await userRepository.getById(modifierId);
     const modifierName = modifier ? modifier.name : "A teammate";
 
+    const priorityHistory = original.priorityHistory || [];
+    const statusHistory = original.statusHistory || [];
+
     // Detect status change
     if (updatedData.status && updatedData.status !== original.status) {
+      statusHistory.push({
+        status: updatedData.status,
+        changedBy: modifierId,
+        changedAt: new Date().toISOString()
+      });
+      updatedData.statusHistory = statusHistory;
+
       backendEvents.logActivity(
         id,
         modifierId,
@@ -89,6 +178,13 @@ export class TaskService {
 
     // Detect priority change
     if (updatedData.priority && updatedData.priority !== original.priority) {
+      priorityHistory.push({
+        priority: updatedData.priority,
+        changedBy: modifierId,
+        changedAt: new Date().toISOString()
+      });
+      updatedData.priorityHistory = priorityHistory;
+
       backendEvents.logActivity(
         id,
         modifierId,
@@ -117,7 +213,87 @@ export class TaskService {
       }
     }
 
-    return await taskRepository.update(id, updatedData);
+    const updatedTask = await taskRepository.update(id, updatedData);
+    if (updatedTask) {
+      // Trigger STATUS_CHANGED automations if applicable
+      if (updatedData.status && updatedData.status !== original.status) {
+        await this.executeAutomations(updatedTask, "STATUS_CHANGED", updatedData.status);
+      }
+      // Trigger PRIORITY_CHANGED automations if applicable
+      if (updatedData.priority && updatedData.priority !== original.priority) {
+        await this.executeAutomations(updatedTask, "PRIORITY_CHANGED", updatedData.priority);
+      }
+    }
+
+    return updatedTask;
+  }
+
+  // Time logging operations
+  async logTime(taskId: string, userId: string, durationMinutes: number, description?: string): Promise<Task | null> {
+    const task = await taskRepository.getById(taskId);
+    if (!task) return null;
+
+    const timeTracking = task.timeTracking || [];
+    const log: TimeLog = {
+      id: `time-${Date.now()}`,
+      userId,
+      durationMinutes,
+      description,
+      loggedAt: new Date().toISOString()
+    };
+    const updatedLogs = [...timeTracking, log];
+
+    const totalMinutes = updatedLogs.reduce((sum, entry) => sum + entry.durationMinutes, 0);
+    const actualHours = parseFloat((totalMinutes / 60).toFixed(2));
+
+    backendEvents.logActivity(
+      taskId,
+      userId,
+      ActivityAction.DETAILS_UPDATED,
+      `logged ${durationMinutes} minutes: "${description || 'no details'}"`
+    );
+
+    return await taskRepository.update(taskId, {
+      timeTracking: updatedLogs,
+      actualHours
+    });
+  }
+
+  // Watchers operations
+  async addWatcher(taskId: string, userId: string): Promise<Task | null> {
+    const task = await taskRepository.getById(taskId);
+    if (!task) return null;
+    const watchers = task.watchers || [];
+    if (watchers.includes(userId)) return task;
+    return await taskRepository.update(taskId, { watchers: [...watchers, userId] });
+  }
+
+  async removeWatcher(taskId: string, userId: string): Promise<Task | null> {
+    const task = await taskRepository.getById(taskId);
+    if (!task) return null;
+    const watchers = task.watchers || [];
+    return await taskRepository.update(taskId, { watchers: watchers.filter(id => id !== userId) });
+  }
+
+  // Dependencies operations
+  async addDependency(taskId: string, dependsOnTaskId: string): Promise<Task | null> {
+    const task = await taskRepository.getById(taskId);
+    if (!task) return null;
+    const dependencies = task.dependencies || [];
+    if (dependencies.includes(dependsOnTaskId)) return task;
+    return await taskRepository.update(taskId, { dependencies: [...dependencies, dependsOnTaskId] });
+  }
+
+  async removeDependency(taskId: string, dependsOnTaskId: string): Promise<Task | null> {
+    const task = await taskRepository.getById(taskId);
+    if (!task) return null;
+    const dependencies = task.dependencies || [];
+    return await taskRepository.update(taskId, { dependencies: dependencies.filter(id => id !== dependsOnTaskId) });
+  }
+
+  // Sprint support operations
+  async linkSprint(taskId: string, sprintId: string | null): Promise<Task | null> {
+    return await taskRepository.update(taskId, { sprintId: sprintId || undefined });
   }
 
   async deleteTask(id: string): Promise<boolean> {

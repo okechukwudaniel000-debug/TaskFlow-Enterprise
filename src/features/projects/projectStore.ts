@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { Project } from "../../types";
 import { useWorkspaceStore } from "../workspace/workspaceStore";
 import { useTaskStore } from "../tasks/taskStore";
+import { useAuthStore } from "../auth/authStore";
 
 export const INITIAL_PROJECTS: Project[] = [
   {
@@ -15,7 +16,8 @@ export const INITIAL_PROJECTS: Project[] = [
     isFavorite: true,
     template: "software",
     progress: 68,
-    createdAt: "2026-05-15T09:00:00Z"
+    createdAt: "2026-05-15T09:00:00Z",
+    ownerId: "user-1"
   },
   {
     id: "proj-2",
@@ -28,7 +30,8 @@ export const INITIAL_PROJECTS: Project[] = [
     isFavorite: true,
     template: "kanban",
     progress: 42,
-    createdAt: "2026-06-01T10:00:00Z"
+    createdAt: "2026-06-01T10:00:00Z",
+    ownerId: "user-1"
   },
   {
     id: "proj-3",
@@ -41,7 +44,8 @@ export const INITIAL_PROJECTS: Project[] = [
     isFavorite: false,
     template: "kanban",
     progress: 15,
-    createdAt: "2026-06-10T14:30:00Z"
+    createdAt: "2026-06-10T14:30:00Z",
+    ownerId: "user-1"
   }
 ];
 
@@ -84,6 +88,7 @@ export const useProjectStore = create<ProjectState>((set, get) => {
     createProject: (name: string, description: string, color: string, icon: string, template: string) => {
       const currentWorkspace = useWorkspaceStore.getState().currentWorkspace;
       if (!currentWorkspace) return;
+      const currentUser = useAuthStore.getState().currentUser;
       const { projects } = get();
       const newProj: Project = {
         id: `proj-${Date.now()}`,
@@ -96,7 +101,8 @@ export const useProjectStore = create<ProjectState>((set, get) => {
         isFavorite: false,
         template,
         progress: 0,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        ownerId: currentUser?.id || "user-1"
       };
       const updated = [...projects, newProj];
       set({ projects: updated });

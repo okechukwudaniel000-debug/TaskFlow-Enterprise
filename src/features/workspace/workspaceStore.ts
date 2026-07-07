@@ -14,7 +14,8 @@ export const INITIAL_WORKSPACES: Workspace[] = [
       { userId: "user-3", role: UserRole.MEMBER },
       { userId: "user-4", role: UserRole.MEMBER },
       { userId: "user-5", role: UserRole.GUEST }
-    ]
+    ],
+    organizationId: "org-1"
   }
 ];
 
@@ -64,7 +65,8 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => {
         name,
         description,
         ownerId: currentUser.id,
-        members: [{ userId: currentUser.id, role: UserRole.ADMIN }]
+        members: [{ userId: currentUser.id, role: UserRole.ADMIN }],
+        organizationId: currentUser.organizationId || "org-1"
       };
       const updated = [...workspaces, newWs];
       set({ workspaces: updated, currentWorkspace: newWs });

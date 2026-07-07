@@ -1,6 +1,9 @@
 import fs from "fs";
 import path from "path";
-import { User, Workspace, Project, Task, Notification, UserRole } from "../../types";
+import { 
+  User, Workspace, Project, Task, Notification, UserRole,
+  Organization, Sprint, AutomationRule 
+} from "../../types";
 import { MOCK_USERS } from "../../features/auth/authStore";
 import { INITIAL_WORKSPACES } from "../../features/workspace/workspaceStore";
 import { INITIAL_PROJECTS } from "../../features/projects/projectStore";
@@ -8,6 +11,61 @@ import { INITIAL_TASKS } from "../../features/tasks/taskStore";
 import { INITIAL_NOTIFICATIONS } from "../../features/notifications/notificationStore";
 
 const DB_FILE_PATH = path.join(process.cwd(), "tf_database.json");
+
+const INITIAL_ORGANIZATIONS: Organization[] = [
+  {
+    id: "org-1",
+    name: "TaskFlow Global Enterprise",
+    subscriptionPlan: "Enterprise"
+  },
+  {
+    id: "org-2",
+    name: "SaaS Developer Lab",
+    subscriptionPlan: "Pro"
+  }
+];
+
+const INITIAL_SPRINTS: Sprint[] = [
+  {
+    id: "spr-1",
+    workspaceId: "ws-1",
+    name: "Sprint 1: Core Architecture",
+    startDate: "2026-07-01T00:00:00.000Z",
+    endDate: "2026-07-14T23:59:59.000Z",
+    status: "active"
+  },
+  {
+    id: "spr-2",
+    workspaceId: "ws-1",
+    name: "Sprint 2: SaaS Expansion & Automation",
+    startDate: "2026-07-15T00:00:00.000Z",
+    endDate: "2026-07-28T23:59:59.000Z",
+    status: "planned"
+  }
+];
+
+const INITIAL_AUTOMATION_RULES: AutomationRule[] = [
+  {
+    id: "auto-1",
+    workspaceId: "ws-1",
+    name: "Auto-Assign review tasks to Okechukwu",
+    trigger: "STATUS_CHANGED",
+    triggerValue: "REVIEW",
+    action: "AUTO_ASSIGN",
+    actionValue: "user-1",
+    isActive: true
+  },
+  {
+    id: "auto-2",
+    workspaceId: "ws-1",
+    name: "Auto-Set Priority Critical on Blockers",
+    trigger: "STATUS_CHANGED",
+    triggerValue: "BACKLOG",
+    action: "SET_PRIORITY",
+    actionValue: "CRITICAL",
+    isActive: true
+  }
+];
 
 export interface AuthProfile {
   userId: string;
@@ -47,6 +105,9 @@ interface DatabaseSchema {
   notifications: Notification[];
   authProfiles: AuthProfile[];
   auditLogs: SecurityAuditLog[];
+  organizations: Organization[];
+  sprints: Sprint[];
+  automationRules: AutomationRule[];
 }
 
 class DatabaseManager {
@@ -61,6 +122,9 @@ class DatabaseManager {
       notifications: INITIAL_NOTIFICATIONS,
       authProfiles: [],
       auditLogs: [],
+      organizations: INITIAL_ORGANIZATIONS,
+      sprints: INITIAL_SPRINTS,
+      automationRules: INITIAL_AUTOMATION_RULES,
     };
     this.load();
   }
@@ -79,6 +143,9 @@ class DatabaseManager {
             notifications: Array.isArray(parsed.notifications) ? parsed.notifications : INITIAL_NOTIFICATIONS,
             authProfiles: Array.isArray(parsed.authProfiles) ? parsed.authProfiles : [],
             auditLogs: Array.isArray(parsed.auditLogs) ? parsed.auditLogs : [],
+            organizations: Array.isArray(parsed.organizations) ? parsed.organizations : INITIAL_ORGANIZATIONS,
+            sprints: Array.isArray(parsed.sprints) ? parsed.sprints : INITIAL_SPRINTS,
+            automationRules: Array.isArray(parsed.automationRules) ? parsed.automationRules : INITIAL_AUTOMATION_RULES,
           };
           console.log("Database successfully loaded from:", DB_FILE_PATH);
         }
@@ -125,6 +192,18 @@ class DatabaseManager {
   // AuditLogs CRUD
   get auditLogs() { return this.data.auditLogs; }
   set auditLogs(val: SecurityAuditLog[]) { this.data.auditLogs = val; this.save(); }
+
+  // Organizations CRUD
+  get organizations() { return this.data.organizations; }
+  set organizations(val: Organization[]) { this.data.organizations = val; this.save(); }
+
+  // Sprints CRUD
+  get sprints() { return this.data.sprints; }
+  set sprints(val: Sprint[]) { this.data.sprints = val; this.save(); }
+
+  // AutomationRules CRUD
+  get automationRules() { return this.data.automationRules; }
+  set automationRules(val: AutomationRule[]) { this.data.automationRules = val; this.save(); }
 }
 
 export const db = new DatabaseManager();

@@ -50,6 +50,8 @@ export interface User {
   language: string;
   theme: "dark" | "light" | "system";
   isOnline?: boolean;
+  createdAt?: string;
+  organizationId?: string;
 }
 
 export interface WorkspaceMember {
@@ -63,6 +65,7 @@ export interface Workspace {
   description: string;
   ownerId: string;
   members: WorkspaceMember[];
+  organizationId: string;
 }
 
 export interface Project {
@@ -77,6 +80,7 @@ export interface Project {
   template: string; // 'software', 'kanban', 'marketing', etc.
   progress: number; // percentage 0-100
   createdAt: string;
+  ownerId: string;
 }
 
 export interface Subtask {
@@ -116,6 +120,26 @@ export interface ActivityLog {
   createdAt: string;
 }
 
+export interface PriorityHistoryItem {
+  priority: TaskPriority;
+  changedBy: string;
+  changedAt: string;
+}
+
+export interface StatusHistoryItem {
+  status: TaskStatus;
+  changedBy: string;
+  changedAt: string;
+}
+
+export interface TimeLog {
+  id: string;
+  userId: string;
+  durationMinutes: number;
+  description?: string;
+  loggedAt: string;
+}
+
 export interface Task {
   id: string;
   title: string;
@@ -141,6 +165,36 @@ export interface Task {
   isArchived?: boolean;
   createdAt: string;
   updatedAt: string;
+  priorityHistory?: PriorityHistoryItem[];
+  statusHistory?: StatusHistoryItem[];
+  timeTracking?: TimeLog[];
+  sprintId?: string;
+}
+
+export interface Organization {
+  id: string;
+  name: string;
+  subscriptionPlan: "Free" | "Pro" | "Enterprise";
+}
+
+export interface Sprint {
+  id: string;
+  workspaceId: string;
+  name: string;
+  startDate: string;
+  endDate: string;
+  status: "planned" | "active" | "completed";
+}
+
+export interface AutomationRule {
+  id: string;
+  workspaceId: string;
+  name: string;
+  trigger: "STATUS_CHANGED" | "TASK_CREATED" | "PRIORITY_CHANGED";
+  triggerValue?: string; // e.g. "DONE"
+  action: "AUTO_ASSIGN" | "SET_PRIORITY" | "ADD_COMMENT" | "SEND_NOTIFICATION";
+  actionValue?: string; // e.g. "user-1" or "HIGH"
+  isActive: boolean;
 }
 
 export interface Notification {

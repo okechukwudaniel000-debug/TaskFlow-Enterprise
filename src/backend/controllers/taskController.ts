@@ -151,6 +151,82 @@ export class TaskController {
       return ResponseHandler.internalError(res, e);
     }
   }
+
+  async logTime(req: AuthenticatedRequest, res: Response) {
+    try {
+      if (!req.user) return ResponseHandler.error(res, "Unauthorized", null, 401);
+      const { id } = req.params;
+      const { durationMinutes, description } = req.body;
+      if (!durationMinutes || isNaN(Number(durationMinutes))) {
+        return ResponseHandler.error(res, "Invalid duration in minutes.", null, 400);
+      }
+      const task = await taskService.logTime(id, req.user.id, parseInt(durationMinutes), description);
+      if (!task) return ResponseHandler.error(res, "Task not found.", null, 404);
+      return ResponseHandler.success(res, task, "Time logged successfully.");
+    } catch (e) {
+      return ResponseHandler.internalError(res, e);
+    }
+  }
+
+  async addWatcher(req: AuthenticatedRequest, res: Response) {
+    try {
+      if (!req.user) return ResponseHandler.error(res, "Unauthorized", null, 401);
+      const { id } = req.params;
+      const { userId } = req.body;
+      const task = await taskService.addWatcher(id, userId || req.user.id);
+      if (!task) return ResponseHandler.error(res, "Task not found.", null, 404);
+      return ResponseHandler.success(res, task, "Watcher added successfully.");
+    } catch (e) {
+      return ResponseHandler.internalError(res, e);
+    }
+  }
+
+  async removeWatcher(req: AuthenticatedRequest, res: Response) {
+    try {
+      if (!req.user) return ResponseHandler.error(res, "Unauthorized", null, 401);
+      const { id, userId } = req.params;
+      const task = await taskService.removeWatcher(id, userId || req.user.id);
+      if (!task) return ResponseHandler.error(res, "Task not found.", null, 404);
+      return ResponseHandler.success(res, task, "Watcher removed successfully.");
+    } catch (e) {
+      return ResponseHandler.internalError(res, e);
+    }
+  }
+
+  async addDependency(req: AuthenticatedRequest, res: Response) {
+    try {
+      const { id } = req.params;
+      const { dependsOnTaskId } = req.body;
+      const task = await taskService.addDependency(id, dependsOnTaskId);
+      if (!task) return ResponseHandler.error(res, "Task not found.", null, 404);
+      return ResponseHandler.success(res, task, "Dependency added successfully.");
+    } catch (e) {
+      return ResponseHandler.internalError(res, e);
+    }
+  }
+
+  async removeDependency(req: AuthenticatedRequest, res: Response) {
+    try {
+      const { id, dependsOnTaskId } = req.params;
+      const task = await taskService.removeDependency(id, dependsOnTaskId);
+      if (!task) return ResponseHandler.error(res, "Task not found.", null, 404);
+      return ResponseHandler.success(res, task, "Dependency removed successfully.");
+    } catch (e) {
+      return ResponseHandler.internalError(res, e);
+    }
+  }
+
+  async linkSprint(req: AuthenticatedRequest, res: Response) {
+    try {
+      const { id } = req.params;
+      const { sprintId } = req.body;
+      const task = await taskService.linkSprint(id, sprintId || null);
+      if (!task) return ResponseHandler.error(res, "Task not found.", null, 404);
+      return ResponseHandler.success(res, task, "Sprint link updated.");
+    } catch (e) {
+      return ResponseHandler.internalError(res, e);
+    }
+  }
 }
 
 export const taskController = new TaskController();
