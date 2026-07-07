@@ -1,0 +1,6 @@
+{
+  "name": "TaskFlow Enterprise",
+  "description": "A premium, collaborative project and task management platform built for modern teams with high-fidelity boards, analytics, and authentication.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
