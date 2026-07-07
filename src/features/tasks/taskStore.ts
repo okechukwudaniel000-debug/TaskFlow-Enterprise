@@ -13,6 +13,7 @@ import {
 } from "../../types";
 import { useAuthStore } from "../auth/authStore";
 import { useNotificationStore } from "../notifications/notificationStore";
+import { socket } from "../../lib/socket";
 
 const safeLocalStorage = typeof window !== "undefined" && typeof localStorage !== "undefined" ? localStorage : {
   getItem: (key: string) => null,
@@ -216,6 +217,8 @@ interface TaskState {
   removeAttachment: (taskId: string, attachmentId: string) => void;
   bulkUpdateTasks: (taskIds: string[], status: TaskStatus) => void;
   duplicateProjectTasks: (sourceProjectId: string, targetProjectId: string) => void;
+  remoteSyncTask: (updatedTask: Task) => void;
+  remoteDeleteTask: (id: string) => void;
 }
 
 export const useTaskStore = create<TaskState>((set, get) => {
@@ -270,6 +273,7 @@ export const useTaskStore = create<TaskState>((set, get) => {
       };
 
       persistTasks([newTask, ...tasks]);
+      socket.emit("task:mutate", { updatedTask: newTask });
 
       // Push notification to assignee
       if (taskData.assigneeId && taskData.assigneeId !== currentUser.id) {
@@ -379,10 +383,15 @@ export const useTaskStore = create<TaskState>((set, get) => {
       });
 
       persistTasks(updated);
+      const targetTask = updated.find(t => t.id === id);
+      if (targetTask) {
+        socket.emit("task:mutate", { updatedTask: targetTask });
+      }
     },
     deleteTask: (id) => {
       const { tasks } = get();
       persistTasks(tasks.filter(t => t.id !== id));
+      socket.emit("task:delete", { taskId: id });
     },
     duplicateTask: (id) => {
       const currentUser = useAuthStore.getState().currentUser;
@@ -450,6 +459,9 @@ export const useTaskStore = create<TaskState>((set, get) => {
 
       // Trigger notification to assignee if it's someone else
       const targetTask = updated.find(t => t.id === taskId);
+      if (targetTask) {
+        socket.emit("task:mutate", { updatedTask: targetTask });
+      }
       if (targetTask && targetTask.assigneeId && targetTask.assigneeId !== currentUser.id) {
         const notif: Notification = {
           id: `not-${Date.now()}-comment`,
@@ -644,6 +656,21 @@ export const useTaskStore = create<TaskState>((set, get) => {
       }));
 
       persistTasks([...tasks, ...newTasks]);
+    },
+    remoteSyncTask: (updatedTask) => {
+      const { tasks } = get();
+      const exists = tasks.some(t => t.id === updatedTask.id);
+      let updated;
+      if (exists) {
+        updated = tasks.map(t => t.id === updatedTask.id ? updatedTask : t);
+      } else {
+        updated = [updatedTask, ...tasks];
+      }
+      persistTasks(updated);
+    },
+    remoteDeleteTask: (id) => {
+      const { tasks } = get();
+      persistTasks(tasks.filter(t => t.id !== id));
     }
   };
 });

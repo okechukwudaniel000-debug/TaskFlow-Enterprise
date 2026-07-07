@@ -17,6 +17,7 @@ import { CreateTaskModal } from "./components/CreateTaskModal";
 import { TaskDrawer } from "./components/TaskDrawer";
 import { TaskStatus } from "./types";
 import { useAuthStore } from "./features/auth/authStore";
+import { initSocket } from "./lib/socket";
 
 import { 
   Layers, LayoutDashboard, Kanban, Library, BarChart3, Users, Settings, 
@@ -32,6 +33,7 @@ function AppContent() {
 
   useEffect(() => {
     initializeAuth();
+    initSocket();
   }, [initializeAuth]);
 
   // Navigation / View state
