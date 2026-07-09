@@ -3,16 +3,19 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense, lazy } from "react";
 import { TaskFlowProvider, useTaskFlow } from "./contexts/TaskFlowContext";
 import { LoginRegister } from "./components/auth/LoginRegister";
-import { DashboardOverview } from "./components/dashboard/DashboardOverview";
-import { KanbanBoard } from "./components/kanban/KanbanBoard";
-import { ProjectCatalog } from "./components/projects/ProjectCatalog";
-import { AnalyticsReport } from "./components/analytics/AnalyticsReport";
-import { TeamManagement } from "./components/team/TeamManagement";
-import { UserProfileSettings } from "./components/profile/UserProfileSettings";
 import { CommandPalette } from "./components/CommandPalette";
+
+const DashboardOverview = lazy(() => import("./components/dashboard/DashboardOverview").then(m => ({ default: m.DashboardOverview })));
+const KanbanBoard = lazy(() => import("./components/kanban/KanbanBoard").then(m => ({ default: m.KanbanBoard })));
+const ProjectCatalog = lazy(() => import("./components/projects/ProjectCatalog").then(m => ({ default: m.ProjectCatalog })));
+const AnalyticsReport = lazy(() => import("./components/analytics/AnalyticsReport").then(m => ({ default: m.AnalyticsReport })));
+const TeamManagement = lazy(() => import("./components/team/TeamManagement").then(m => ({ default: m.TeamManagement })));
+const UserProfileSettings = lazy(() => import("./components/profile/UserProfileSettings").then(m => ({ default: m.UserProfileSettings })));
+const PerformanceSandbox = lazy(() => import("./components/performance/PerformanceSandbox").then(m => ({ default: m.PerformanceSandbox })));
+
 import { CreateTaskModal } from "./components/CreateTaskModal";
 import { TaskDrawer } from "./components/TaskDrawer";
 import { TaskStatus } from "./types";
@@ -21,7 +24,7 @@ import { initSocket } from "./lib/socket";
 
 import { 
   Layers, LayoutDashboard, Kanban, Library, BarChart3, Users, Settings, 
-  Search, Plus, LogOut, Sparkles, Menu, X, ArrowRight, ShieldCheck, ChevronDown
+  Search, Plus, LogOut, Sparkles, Menu, X, ArrowRight, ShieldCheck, ChevronDown, Cpu
 } from "lucide-react";
 
 function AppContent() {
@@ -240,6 +243,19 @@ function AppContent() {
               <Settings className="w-4 h-4" />
               <span>Profile Parameters</span>
             </button>
+
+            {/* Performance Center */}
+            <button
+              onClick={() => { setActiveView("performance"); setIsMobileSidebarOpen(false); }}
+              className={`w-full flex items-center gap-3 px-3 py-2 border rounded-md text-xs font-semibold transition-all duration-150 ${
+                activeView === "performance"
+                  ? "bg-[#1a1a1a] border-[#333] text-blue-400"
+                  : "text-zinc-400 border-transparent hover:text-white hover:bg-[#151515]"
+              }`}
+            >
+              <Cpu className="w-4 h-4" />
+              <span>Performance Sandbox</span>
+            </button>
           </nav>
 
           {/* Quick Create task Trigger Action inside rail */}
@@ -320,35 +336,46 @@ function AppContent() {
 
         {/* ACTIVE SCREEN RENDER VIEWS PANEL */}
         <div className="flex-1 overflow-y-auto p-4 md:p-6 bg-[#090909]">
-          {activeView === "dashboard" && (
-            <DashboardOverview 
-              onNavigateToView={setActiveView} 
-              onSelectTask={setSelectedTaskId} 
-            />
-          )}
+          <Suspense fallback={
+            <div className="flex flex-col items-center justify-center h-full gap-3 py-24">
+              <div className="w-8 h-8 border-4 border-t-blue-500 border-neutral-850 rounded-full animate-spin" />
+              <span className="text-xs font-mono text-zinc-500">Retrieving system partition...</span>
+            </div>
+          }>
+            {activeView === "dashboard" && (
+              <DashboardOverview 
+                onNavigateToView={setActiveView} 
+                onSelectTask={setSelectedTaskId} 
+              />
+            )}
 
-          {activeView === "board" && (
-            <KanbanBoard 
-              onSelectTask={setSelectedTaskId} 
-              onOpenCreateTask={handleTriggerCreateTask} 
-            />
-          )}
+            {activeView === "board" && (
+              <KanbanBoard 
+                onSelectTask={setSelectedTaskId} 
+                onOpenCreateTask={handleTriggerCreateTask} 
+              />
+            )}
 
-          {activeView === "projects" && (
-            <ProjectCatalog />
-          )}
+            {activeView === "projects" && (
+              <ProjectCatalog />
+            )}
 
-          {activeView === "analytics" && (
-            <AnalyticsReport />
-          )}
+            {activeView === "analytics" && (
+              <AnalyticsReport />
+            )}
 
-          {activeView === "team" && (
-            <TeamManagement />
-          )}
+            {activeView === "team" && (
+              <TeamManagement />
+            )}
 
-          {activeView === "profile" && (
-            <UserProfileSettings />
-          )}
+            {activeView === "profile" && (
+              <UserProfileSettings />
+            )}
+
+            {activeView === "performance" && (
+              <PerformanceSandbox />
+            )}
+          </Suspense>
         </div>
 
         {/* Bottom Status Bar */}
