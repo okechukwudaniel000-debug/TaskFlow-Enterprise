@@ -6,11 +6,13 @@
 import React, { useState } from "react";
 import { 
   X, Calendar, User, Clock, Flag, Tag, Layers, MessageSquare, 
-  Paperclip, Plus, CheckSquare, ListTodo, History, Trash2, Copy, Send
+  Paperclip, Plus, CheckSquare, ListTodo, History, Trash2, Copy, Send,
+  Sparkles, Loader2, Brain
 } from "lucide-react";
 import { useTaskFlow } from "../contexts/TaskFlowContext";
 import { Task, TaskPriority, TaskStatus } from "../types";
 import { useNotificationStore } from "../features/notifications/notificationStore";
+import { apiFetch } from "../features/auth/authStore";
 
 interface TaskDrawerProps {
   taskId: string | null;
@@ -33,6 +35,152 @@ export const TaskDrawer: React.FC<TaskDrawerProps> = ({ taskId, onClose }) => {
   
   // Attachments loading state simulation
   const [isUploading, setIsUploading] = useState(false);
+
+  // AI Assistant states
+  const [isGeneratingDesc, setIsGeneratingDesc] = useState(false);
+  const [isGeneratingSubtasks, setIsGeneratingSubtasks] = useState(false);
+  const [isEstimatingEffort, setIsEstimatingEffort] = useState(false);
+  const [isSuggestingPriority, setIsSuggestingPriority] = useState(false);
+  const [isSummarizingDiscussion, setIsSummarizingDiscussion] = useState(false);
+  const [aiDiscussionSummary, setAiDiscussionSummary] = useState<string | null>(null);
+
+  // Controlled Title and Description to allow dynamic updates from AI
+  const [titleInput, setTitleInput] = useState<string | null>(null);
+  const [descriptionInput, setDescriptionInput] = useState<string | null>(null);
+
+  React.useEffect(() => {
+    setTitleInput(null);
+    setDescriptionInput(null);
+    setAiDiscussionSummary(null);
+  }, [taskId]);
+
+  const handleAiGenerateDescription = async () => {
+    const currentTitle = titleInput !== null ? titleInput : task.title;
+    const currentNotes = descriptionInput !== null ? descriptionInput : task.description;
+    if (!currentTitle) return;
+
+    setIsGeneratingDesc(true);
+    try {
+      const res = await apiFetch("/api/ai/generate-description", {
+        method: "POST",
+        body: JSON.stringify({ title: currentTitle, notes: currentNotes })
+      });
+      const body = await res.json();
+      if (body.success && body.data?.description) {
+        setDescriptionInput(body.data.description);
+        updateTask(task.id, { description: body.data.description });
+      } else {
+        alert(body.message || "Failed to generate AI description.");
+      }
+    } catch (err: any) {
+      console.error(err);
+      alert("AI generation failed. Please ensure GEMINI_API_KEY is configured.");
+    } finally {
+      setIsGeneratingDesc(false);
+    }
+  };
+
+  const handleAiGenerateSubtasks = async () => {
+    const currentTitle = titleInput !== null ? titleInput : task.title;
+    const currentDesc = descriptionInput !== null ? descriptionInput : task.description;
+    if (!currentTitle) return;
+
+    setIsGeneratingSubtasks(true);
+    try {
+      const res = await apiFetch("/api/ai/generate-subtasks", {
+        method: "POST",
+        body: JSON.stringify({ title: currentTitle, description: currentDesc })
+      });
+      const body = await res.json();
+      if (body.success && Array.isArray(body.data?.subtasks)) {
+        for (const subTitle of body.data.subtasks) {
+          addSubtask(task.id, subTitle);
+        }
+      } else {
+        alert(body.message || "Failed to generate AI subtasks.");
+      }
+    } catch (err: any) {
+      console.error(err);
+      alert("AI subtasks breakdown failed.");
+    } finally {
+      setIsGeneratingSubtasks(false);
+    }
+  };
+
+  const handleAiEstimateEffort = async () => {
+    const currentTitle = titleInput !== null ? titleInput : task.title;
+    const currentDesc = descriptionInput !== null ? descriptionInput : task.description;
+    if (!currentTitle) return;
+
+    setIsEstimatingEffort(true);
+    try {
+      const res = await apiFetch("/api/ai/estimate-effort", {
+        method: "POST",
+        body: JSON.stringify({ title: currentTitle, description: currentDesc })
+      });
+      const body = await res.json();
+      if (body.success && body.data) {
+        const { hours, reasoning } = body.data;
+        updateTask(task.id, { estimatedHours: hours });
+        alert(`AI Suggestion: ${hours} hours.\n\nReasoning:\n${reasoning}`);
+      } else {
+        alert(body.message || "Failed to estimate effort with AI.");
+      }
+    } catch (err: any) {
+      console.error(err);
+      alert("AI effort estimation failed.");
+    } finally {
+      setIsEstimatingEffort(false);
+    }
+  };
+
+  const handleAiSuggestPriority = async () => {
+    const currentTitle = titleInput !== null ? titleInput : task.title;
+    const currentDesc = descriptionInput !== null ? descriptionInput : task.description;
+    if (!currentTitle) return;
+
+    setIsSuggestingPriority(true);
+    try {
+      const res = await apiFetch("/api/ai/suggest-priority", {
+        method: "POST",
+        body: JSON.stringify({ title: currentTitle, description: currentDesc, dueDate: task.dueDate })
+      });
+      const body = await res.json();
+      if (body.success && body.data) {
+        const { priority, reasoning } = body.data;
+        updateTask(task.id, { priority });
+        alert(`AI Recommended Priority: ${priority}.\n\nReasoning:\n${reasoning}`);
+      } else {
+        alert(body.message || "Failed to suggest priority with AI.");
+      }
+    } catch (err: any) {
+      console.error(err);
+      alert("AI priority suggestion failed.");
+    } finally {
+      setIsSuggestingPriority(false);
+    }
+  };
+
+  const handleAiSummarizeDiscussion = async () => {
+    setIsSummarizingDiscussion(true);
+    setAiDiscussionSummary(null);
+    try {
+      const res = await apiFetch(`/api/ai/tasks/${task.id}/summarize-discussion`, {
+        method: "POST"
+      });
+      const body = await res.json();
+      if (body.success && body.data?.summary) {
+        setAiDiscussionSummary(body.data.summary);
+      } else {
+        alert(body.message || "Failed to summarize discussions with AI.");
+      }
+    } catch (err: any) {
+      console.error(err);
+      alert("AI discussion summary failed.");
+    } finally {
+      setIsSummarizingDiscussion(false);
+    }
+  };
 
   if (!task) return null;
 
@@ -212,8 +360,14 @@ export const TaskDrawer: React.FC<TaskDrawerProps> = ({ taskId, onClose }) => {
             <div>
               <input
                 type="text"
-                defaultValue={task.title}
-                onBlur={handleTitleBlur}
+                value={titleInput !== null ? titleInput : task.title}
+                onChange={(e) => setTitleInput(e.target.value)}
+                onBlur={(e) => {
+                  const nextTitle = e.target.value.trim();
+                  if (nextTitle && nextTitle !== task.title) {
+                    updateTask(task.id, { title: nextTitle });
+                  }
+                }}
                 className="w-full bg-transparent border-0 text-lg font-extrabold text-white focus:ring-0 px-0 focus:border-b focus:border-blue-500 py-1 font-sans tracking-tight"
                 placeholder="Task Title"
               />
@@ -222,14 +376,34 @@ export const TaskDrawer: React.FC<TaskDrawerProps> = ({ taskId, onClose }) => {
             {/* Task Description textbox */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <h4 className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider font-mono">
-                  Description
-                </h4>
+                <div className="flex items-center gap-2">
+                  <h4 className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider font-mono">
+                    Description
+                  </h4>
+                  <button
+                    onClick={handleAiGenerateDescription}
+                    disabled={isGeneratingDesc}
+                    className="inline-flex items-center gap-1 text-[10px] text-blue-400 hover:text-blue-300 transition-colors font-mono font-bold cursor-pointer disabled:opacity-50"
+                  >
+                    {isGeneratingDesc ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <Sparkles className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
+                    )}
+                    <span>AI Generate</span>
+                  </button>
+                </div>
                 <span className="text-[9px] text-zinc-600 font-mono">Auto-saved</span>
               </div>
               <textarea
-                defaultValue={task.description}
-                onBlur={handleDescriptionBlur}
+                value={descriptionInput !== null ? descriptionInput : task.description}
+                onChange={(e) => setDescriptionInput(e.target.value)}
+                onBlur={(e) => {
+                  const nextDesc = e.target.value.trim();
+                  if (nextDesc !== task.description) {
+                    updateTask(task.id, { description: nextDesc });
+                  }
+                }}
                 rows={5}
                 className="w-full bg-[#0b0b0b] border border-[#262626] rounded-md p-3 text-xs text-zinc-300 placeholder-zinc-700 focus:border-[#333] transition-colors outline-none font-sans"
                 placeholder="Add rich details or specifications for this issue..."
@@ -238,11 +412,26 @@ export const TaskDrawer: React.FC<TaskDrawerProps> = ({ taskId, onClose }) => {
 
             {/* Subtasks checklist Section */}
             <div className="space-y-3.5 pt-2">
-              <div className="flex items-center gap-2">
-                <ListTodo className="w-4 h-4 text-zinc-500" />
-                <h4 className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider font-mono">
-                  Subtasks ({task.subtasks.filter(s => s.isCompleted).length}/{task.subtasks.length})
-                </h4>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <ListTodo className="w-4 h-4 text-zinc-500" />
+                  <h4 className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider font-mono">
+                    Subtasks ({task.subtasks.filter(s => s.isCompleted).length}/{task.subtasks.length})
+                  </h4>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleAiGenerateSubtasks}
+                  disabled={isGeneratingSubtasks}
+                  className="inline-flex items-center gap-1 text-[10px] text-blue-400 hover:text-blue-300 transition-colors font-mono font-bold cursor-pointer disabled:opacity-50"
+                >
+                  {isGeneratingSubtasks ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <Sparkles className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
+                  )}
+                  <span>✨ AI Break Down</span>
+                </button>
               </div>
 
               {/* Existing Subtasks */}
@@ -368,12 +557,47 @@ export const TaskDrawer: React.FC<TaskDrawerProps> = ({ taskId, onClose }) => {
 
             {/* Comments Feed Area */}
             <div className="space-y-4 pt-4 border-t border-[#262626]">
-              <div className="flex items-center gap-2">
-                <MessageSquare className="w-4 h-4 text-zinc-500" />
-                <h4 className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider font-mono">
-                  Comments & Discussion ({task.comments.length})
-                </h4>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <MessageSquare className="w-4 h-4 text-zinc-500" />
+                  <h4 className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider font-mono">
+                    Comments & Discussion ({task.comments.length})
+                  </h4>
+                </div>
+                {task.comments.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={handleAiSummarizeDiscussion}
+                    disabled={isSummarizingDiscussion}
+                    className="inline-flex items-center gap-1 text-[10px] text-blue-400 hover:text-blue-300 transition-colors font-mono font-bold cursor-pointer disabled:opacity-50"
+                  >
+                    {isSummarizingDiscussion ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <Sparkles className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
+                    )}
+                    <span>Summarize Discussion</span>
+                  </button>
+                )}
               </div>
+
+              {/* AI Discussion Summary Box */}
+              {aiDiscussionSummary && (
+                <div className="bg-blue-950/20 border border-blue-500/20 rounded-md p-3.5 text-xs text-blue-200 font-sans space-y-1.5 animate-in fade-in slide-in-from-top-1 duration-200">
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-blue-400 flex items-center gap-1">
+                      <Brain className="w-3.5 h-3.5 text-blue-400" /> AI Executive Summary
+                    </span>
+                    <button 
+                      onClick={() => setAiDiscussionSummary(null)}
+                      className="text-blue-400 hover:text-blue-300 font-bold"
+                    >
+                      Dismiss
+                    </button>
+                  </div>
+                  <p className="leading-relaxed whitespace-pre-line">{aiDiscussionSummary}</p>
+                </div>
+              )}
 
               {/* Existing comments */}
               <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
@@ -461,9 +685,24 @@ export const TaskDrawer: React.FC<TaskDrawerProps> = ({ taskId, onClose }) => {
 
               {/* Priority Select */}
               <div className="space-y-1.5 mb-4">
-                <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-wider font-mono">
-                  Priority
-                </label>
+                <div className="flex items-center justify-between">
+                  <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-wider font-mono">
+                    Priority
+                  </label>
+                  <button
+                    type="button"
+                    onClick={handleAiSuggestPriority}
+                    disabled={isSuggestingPriority}
+                    className="inline-flex items-center gap-1 text-[9px] text-blue-400 hover:text-blue-300 font-mono font-bold cursor-pointer disabled:opacity-50"
+                  >
+                    {isSuggestingPriority ? (
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                    ) : (
+                      <Sparkles className="w-3 h-3 text-amber-400 animate-pulse" />
+                    )}
+                    <span>AI Suggest</span>
+                  </button>
+                </div>
                 <select
                   value={task.priority}
                   onChange={(e) => handlePriorityChange(e.target.value as TaskPriority)}
@@ -510,9 +749,25 @@ export const TaskDrawer: React.FC<TaskDrawerProps> = ({ taskId, onClose }) => {
               {/* Work Hours metrics */}
               <div className="grid grid-cols-2 gap-3 mb-4">
                 <div className="space-y-1.5">
-                  <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-wider font-mono flex items-center gap-1">
-                    <Clock className="w-3 h-3" /> Estimated
-                  </label>
+                  <div className="flex items-center justify-between">
+                    <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-wider font-mono flex items-center gap-1">
+                      <Clock className="w-3 h-3" /> Estimated
+                    </label>
+                    <button
+                      type="button"
+                      onClick={handleAiEstimateEffort}
+                      disabled={isEstimatingEffort}
+                      className="inline-flex items-center gap-0.5 text-[9px] text-blue-400 hover:text-blue-300 font-mono font-bold cursor-pointer disabled:opacity-50"
+                      title="Request AI Effort Suggestion"
+                    >
+                      {isEstimatingEffort ? (
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                      ) : (
+                        <Sparkles className="w-3 h-3 text-amber-400" />
+                      )}
+                      <span>AI</span>
+                    </button>
+                  </div>
                   <input
                     type="number"
                     min={0}
