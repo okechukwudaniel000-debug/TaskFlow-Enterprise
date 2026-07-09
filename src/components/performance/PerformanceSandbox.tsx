@@ -9,6 +9,7 @@ import {
 } from "@tanstack/react-query";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { apiFetch } from "../../features/auth/authStore";
+import { DesignSystemPlayground } from "./DesignSystemPlayground";
 import { 
   Cpu, Terminal, Database, Activity, RefreshCw, AlertTriangle, 
   Clock, Flame, Send, Info, ChevronRight, Play, Server, Trash, ListRestart
@@ -80,7 +81,7 @@ export const PerformanceSandbox: React.FC = () => {
   // -------------------------------------------------------------
   // 2. VIRTUALIZED INFINITE SCROLLER (Demonstrating 5,000 records rendering)
   // -------------------------------------------------------------
-  const [isInfiniteMode, setIsInfiniteMode] = useState(false);
+  const [activeTab, setActiveTab] = useState<"cache" | "virtual" | "design">("cache");
   const infiniteParentRef = useRef<HTMLDivElement>(null);
 
   // Infinite query fetching
@@ -106,7 +107,7 @@ export const PerformanceSandbox: React.FC = () => {
       return current < lastPage.stats.totalPages ? current + 1 : undefined;
     },
     initialPageParam: 1,
-    enabled: isInfiniteMode // Only fetch when infinite sub-panel is open
+    enabled: activeTab === "virtual" // Only fetch when infinite sub-panel is open
   });
 
   // Flattened logs list for virtualizer
@@ -297,11 +298,11 @@ export const PerformanceSandbox: React.FC = () => {
 
       {/* Main interactive tabs */}
       <div className="bg-[#0b0b0b] border border-neutral-800 rounded-xl overflow-hidden shadow-xl">
-        <div className="flex border-b border-neutral-800 bg-[#111111]/70 px-4 pt-3.5 gap-2 shrink-0">
+        <div className="flex border-b border-neutral-800 bg-[#111111]/70 px-4 pt-3.5 gap-2 shrink-0 overflow-x-auto scrollbar-none">
           <button 
-            onClick={() => setIsInfiniteMode(false)}
-            className={`px-4.5 py-2.5 text-xs font-semibold rounded-t-lg border-t-2 transition-all cursor-pointer ${
-              !isInfiniteMode 
+            onClick={() => setActiveTab("cache")}
+            className={`px-4.5 py-2.5 text-xs font-semibold rounded-t-lg border-t-2 transition-all cursor-pointer whitespace-nowrap ${
+              activeTab === "cache"
                 ? "bg-[#0b0b0b] text-blue-400 border-blue-500" 
                 : "text-zinc-500 border-transparent hover:text-white"
             }`}
@@ -309,19 +310,29 @@ export const PerformanceSandbox: React.FC = () => {
             API Cache & Deduplication Test
           </button>
           <button 
-            onClick={() => setIsInfiniteMode(true)}
-            className={`px-4.5 py-2.5 text-xs font-semibold rounded-t-lg border-t-2 transition-all cursor-pointer ${
-              isInfiniteMode 
+            onClick={() => setActiveTab("virtual")}
+            className={`px-4.5 py-2.5 text-xs font-semibold rounded-t-lg border-t-2 transition-all cursor-pointer whitespace-nowrap ${
+              activeTab === "virtual"
                 ? "bg-[#0b0b0b] text-blue-400 border-blue-500" 
                 : "text-zinc-500 border-transparent hover:text-white"
             }`}
           >
             Infinite Scroll Virtualizer (5k Logs)
           </button>
+          <button 
+            onClick={() => setActiveTab("design")}
+            className={`px-4.5 py-2.5 text-xs font-semibold rounded-t-lg border-t-2 transition-all cursor-pointer whitespace-nowrap ${
+              activeTab === "design"
+                ? "bg-[#0b0b0b] text-blue-400 border-blue-500" 
+                : "text-zinc-500 border-transparent hover:text-white"
+            }`}
+          >
+            UI Design System Playground
+          </button>
         </div>
 
         {/* TAB Content 1: API Cache & Deduplication Panel */}
-        {!isInfiniteMode && (
+        {activeTab === "cache" && (
           <div className="p-5 space-y-5">
             
             <div className="flex flex-col lg:flex-row gap-5">
@@ -630,7 +641,7 @@ export const PerformanceSandbox: React.FC = () => {
         )}
 
         {/* TAB Content 2: Virtualized Infinite Scroller */}
-        {isInfiniteMode && (
+        {activeTab === "virtual" && (
           <div className="p-5 space-y-4">
             
             {/* Header info bar */}
@@ -725,6 +736,11 @@ export const PerformanceSandbox: React.FC = () => {
             )}
 
           </div>
+        )}
+
+        {/* TAB Content 3: UI Design System Playground */}
+        {activeTab === "design" && (
+          <DesignSystemPlayground />
         )}
 
       </div>

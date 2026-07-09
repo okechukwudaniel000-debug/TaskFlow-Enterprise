@@ -21,6 +21,7 @@ import { TaskDrawer } from "./components/TaskDrawer";
 import { TaskStatus } from "./types";
 import { useAuthStore } from "./features/auth/authStore";
 import { initSocket } from "./lib/socket";
+import { ToastProvider } from "./components/ui";
 
 import { 
   Layers, LayoutDashboard, Kanban, Library, BarChart3, Users, Settings, 
@@ -486,8 +487,10 @@ function AppContent() {
 
 export default function App() {
   return (
-    <TaskFlowProvider>
-      <AppContent />
-    </TaskFlowProvider>
+    <ToastProvider>
+      <TaskFlowProvider>
+        <AppContent />
+      </TaskFlowProvider>
+    </ToastProvider>
   );
 }
