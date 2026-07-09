@@ -169,6 +169,8 @@ export interface Task {
   statusHistory?: StatusHistoryItem[];
   timeTracking?: TimeLog[];
   sprintId?: string;
+  recurrence?: "none" | "daily" | "weekly" | "monthly";
+  customFields?: { id: string; name: string; value: string }[];
 }
 
 export interface Organization {

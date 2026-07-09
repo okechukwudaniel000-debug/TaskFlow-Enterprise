@@ -294,6 +294,7 @@ export const useTaskStore = create<TaskState>((set, get) => {
       if (!currentUser) return;
 
       const { tasks } = get();
+      const previousTask = tasks.find(t => t.id === id);
       const updated = tasks.map(t => {
         if (t.id === id) {
           const changes: ActivityLog[] = [];
@@ -386,6 +387,64 @@ export const useTaskStore = create<TaskState>((set, get) => {
       const targetTask = updated.find(t => t.id === id);
       if (targetTask) {
         socket.emit("task:mutate", { updatedTask: targetTask });
+
+        // Handle Automatic Recurring Tasks
+        if (
+          previousTask &&
+          previousTask.status !== TaskStatus.DONE &&
+          targetTask.status === TaskStatus.DONE &&
+          targetTask.recurrence &&
+          targetTask.recurrence !== "none"
+        ) {
+          let nextDueDate = targetTask.dueDate;
+          if (nextDueDate) {
+            try {
+              const date = new Date(nextDueDate);
+              if (targetTask.recurrence === "daily") {
+                date.setDate(date.getDate() + 1);
+              } else if (targetTask.recurrence === "weekly") {
+                date.setDate(date.getDate() + 7);
+              } else if (targetTask.recurrence === "monthly") {
+                date.setMonth(date.getMonth() + 1);
+              }
+              nextDueDate = date.toISOString().split("T")[0];
+            } catch (err) {
+              nextDueDate = new Date().toISOString().split("T")[0];
+            }
+          } else {
+            const date = new Date();
+            date.setDate(date.getDate() + 1);
+            nextDueDate = date.toISOString().split("T")[0];
+          }
+
+          const nextId = `task-${Date.now()}`;
+          const nextTask: Task = {
+            ...targetTask,
+            id: nextId,
+            status: TaskStatus.TODO,
+            dueDate: nextDueDate,
+            subtasks: targetTask.subtasks.map(s => ({ ...s, isCompleted: false })),
+            checklist: targetTask.checklist.map(c => ({ ...c, isCompleted: false })),
+            attachments: [],
+            comments: [],
+            activityTimeline: [
+              {
+                id: `act-${Date.now()}`,
+                taskId: nextId,
+                userId: currentUser.id,
+                action: ActivityAction.CREATED,
+                details: `auto-generated next occurrence (${targetTask.recurrence}) of completed task '${targetTask.title}'`,
+                createdAt: new Date().toISOString()
+              }
+            ],
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          };
+
+          const finalTasks = [nextTask, ...updated];
+          persistTasks(finalTasks);
+          socket.emit("task:mutate", { updatedTask: nextTask });
+        }
       }
     },
     deleteTask: (id) => {

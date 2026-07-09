@@ -46,6 +46,7 @@ function AppContent() {
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false);
   const [createTaskInitialStatus, setCreateTaskInitialStatus] = useState<TaskStatus>(TaskStatus.TODO);
+  const [createTaskInitialDueDate, setCreateTaskInitialDueDate] = useState<string>("");
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
 
   // Workspace creation modal simulation
@@ -91,8 +92,9 @@ function AppContent() {
     setShowWsModal(false);
   };
 
-  const handleTriggerCreateTask = (status: TaskStatus = TaskStatus.TODO) => {
+  const handleTriggerCreateTask = (status: TaskStatus = TaskStatus.TODO, dueDate: string = "") => {
     setCreateTaskInitialStatus(status);
+    setCreateTaskInitialDueDate(dueDate);
     setIsCreateTaskOpen(true);
   };
 
@@ -386,6 +388,7 @@ function AppContent() {
         isOpen={isCreateTaskOpen}
         onClose={() => setIsCreateTaskOpen(false)}
         initialStatus={createTaskInitialStatus}
+        initialDueDate={createTaskInitialDueDate}
       />
 
       {/* Task Drawer sliding panel details */}

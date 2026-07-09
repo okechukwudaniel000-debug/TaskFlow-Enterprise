@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { X, Calendar, User, Clock, Flag, Tag, Layers, CheckCircle } from "lucide-react";
 import { useTaskFlow } from "../contexts/TaskFlowContext";
 import { TaskStatus, TaskPriority } from "../types";
@@ -12,12 +12,14 @@ interface CreateTaskModalProps {
   isOpen: boolean;
   onClose: () => void;
   initialStatus?: TaskStatus;
+  initialDueDate?: string;
 }
 
 export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({ 
   isOpen, 
   onClose,
-  initialStatus = TaskStatus.TODO
+  initialStatus = TaskStatus.TODO,
+  initialDueDate = ""
 }) => {
   const { createTask, projects, users, currentUser } = useTaskFlow();
 
@@ -28,13 +30,20 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
   const [assigneeId, setAssigneeId] = useState("");
   const [priority, setPriority] = useState<TaskPriority>(TaskPriority.MEDIUM);
   const [status, setStatus] = useState<TaskStatus>(initialStatus);
-  const [dueDate, setDueDate] = useState("");
+  const [dueDate, setDueDate] = useState(initialDueDate);
   const [estimatedHours, setEstimatedHours] = useState<number>(4);
   const [tagsInput, setTagsInput] = useState("");
   const [labelsInput, setLabelsInput] = useState("");
   
   // Validation State
   const [validationError, setValidationError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      setDueDate(initialDueDate);
+      setStatus(initialStatus);
+    }
+  }, [isOpen, initialDueDate, initialStatus]);
 
   if (!isOpen) return null;
 

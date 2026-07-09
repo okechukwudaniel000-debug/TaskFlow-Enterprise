@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { useTaskFlow } from "../contexts/TaskFlowContext";
 import { Task, TaskPriority, TaskStatus } from "../types";
+import { useNotificationStore } from "../features/notifications/notificationStore";
 
 interface TaskDrawerProps {
   taskId: string | null;
@@ -82,12 +83,38 @@ export const TaskDrawer: React.FC<TaskDrawerProps> = ({ taskId, onClose }) => {
     updateTask(task.id, { actualHours: hours });
   };
 
-  // Comments addition
+  // Comments addition with user mentions
   const handlePostComment = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!commentText.trim()) return;
-    addComment(task.id, commentText.trim());
+    const text = commentText.trim();
+    if (!text) return;
+    
+    addComment(task.id, text);
     setCommentText("");
+
+    // Detect @mentions and notify mentioned users
+    const mentions = text.match(/@(\w+)/g);
+    if (mentions) {
+      mentions.forEach(mention => {
+        const username = mention.substring(1).toLowerCase();
+        const matchedUser = users.find(u => 
+          u.name.toLowerCase().replace(/\s+/g, "").includes(username) ||
+          u.id.toLowerCase().includes(username)
+        );
+        if (matchedUser && matchedUser.id !== currentUser?.id) {
+          const newNotif = {
+            id: `not-${Date.now()}-mention`,
+            userId: matchedUser.id,
+            title: "You were mentioned",
+            description: `${currentUser?.name} mentioned you in task '${task.title}': "${text.slice(0, 45)}..."`,
+            isRead: false,
+            type: "mention" as const,
+            createdAt: new Date().toISOString()
+          };
+          useNotificationStore.getState().addNotification(newNotif);
+        }
+      });
+    }
   };
 
   // Add subtask
@@ -514,6 +541,173 @@ export const TaskDrawer: React.FC<TaskDrawerProps> = ({ taskId, onClose }) => {
                 <div className="min-w-0">
                   <p className="text-[9px] text-zinc-500 uppercase tracking-wider font-mono">Reporter</p>
                   <p className="text-xs font-semibold text-zinc-300 truncate">{reporter?.name || "Unknown Author"}</p>
+                </div>
+              </div>
+
+              {/* Recurrence Dropdown */}
+              <div className="space-y-1.5 mb-4">
+                <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-wider font-mono">
+                  Recurrence Rules
+                </label>
+                <select
+                  value={task.recurrence || "none"}
+                  onChange={(e) => updateTask(task.id, { recurrence: e.target.value as any })}
+                  className="w-full bg-[#151515] border border-[#262626] rounded-md p-2 text-xs text-white focus:border-[#333] cursor-pointer outline-none"
+                >
+                  <option value="none">No Repeat</option>
+                  <option value="daily">Daily Repeat</option>
+                  <option value="weekly">Weekly Repeat</option>
+                  <option value="monthly">Monthly Repeat</option>
+                </select>
+              </div>
+
+              {/* Task Dependencies */}
+              <div className="space-y-1.5 mb-4 pt-3 border-t border-[#1e1e1e]">
+                <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-wider font-mono">
+                  Task Dependencies
+                </label>
+                <div className="space-y-1.5">
+                  {(task.dependencies || []).length === 0 ? (
+                    <p className="text-[10px] text-zinc-600 italic">No prerequisites linked.</p>
+                  ) : (
+                    <div className="flex flex-wrap gap-1.5">
+                      {(task.dependencies || []).map(depId => (
+                        <span key={depId} className="inline-flex items-center gap-1 text-[9px] font-mono bg-[#111111] border border-[#262626] px-2 py-0.5 rounded text-indigo-300">
+                          <span>{depId}</span>
+                          <button 
+                            type="button"
+                            onClick={() => {
+                              const updated = (task.dependencies || []).filter(id => id !== depId);
+                              updateTask(task.id, { dependencies: updated });
+                            }}
+                            className="text-zinc-500 hover:text-red-400 font-bold font-sans cursor-pointer ml-1"
+                          >
+                            ×
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  <select
+                    value=""
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        const updated = [...(task.dependencies || []), e.target.value];
+                        updateTask(task.id, { dependencies: updated });
+                      }
+                    }}
+                    className="w-full bg-[#151515] border border-[#262626] rounded-md p-1.5 text-[11px] text-zinc-400 outline-none"
+                  >
+                    <option value="">+ Link Prerequisite...</option>
+                    {tasks
+                      .filter(t => t.id !== task.id && !(task.dependencies || []).includes(t.id))
+                      .map(t => (
+                        <option key={t.id} value={t.id}>{t.id} - {t.title.slice(0, 30)}...</option>
+                      ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Custom Fields section */}
+              <div className="space-y-1.5 mb-4 pt-3 border-t border-[#1e1e1e]">
+                <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-wider font-mono flex items-center justify-between">
+                  <span>Custom Metadata Fields</span>
+                </label>
+                
+                <div className="space-y-1.5">
+                  {(task.customFields || []).length === 0 ? (
+                    <p className="text-[10px] text-zinc-600 italic">No custom fields defined.</p>
+                  ) : (
+                    (task.customFields || []).map(f => (
+                      <div key={f.id} className="flex items-center justify-between gap-1 text-[11px] bg-[#151515] p-1.5 rounded border border-[#222]">
+                        <span className="font-mono text-zinc-400 font-semibold">{f.name}:</span>
+                        <span className="text-white truncate max-w-[120px]">{f.value}</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const updated = (task.customFields || []).filter(field => field.id !== f.id);
+                            updateTask(task.id, { customFields: updated });
+                          }}
+                          className="text-zinc-600 hover:text-red-400 font-bold ml-1 cursor-pointer font-sans"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                {/* Add new custom field inline */}
+                <div className="flex gap-1.5 pt-1.5">
+                  <input
+                    type="text"
+                    id="new-field-name"
+                    placeholder="Name"
+                    className="flex-1 bg-[#151515] border border-[#262626] rounded px-2 py-1 text-[10px] text-white outline-none"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        const valInput = document.getElementById("new-field-value") as HTMLInputElement;
+                        const nameInput = e.currentTarget;
+                        if (nameInput.value.trim() && valInput.value.trim()) {
+                          const newField = {
+                            id: `cf-${Date.now()}`,
+                            name: nameInput.value.trim(),
+                            value: valInput.value.trim()
+                          };
+                          const updated = [...(task.customFields || []), newField];
+                          updateTask(task.id, { customFields: updated });
+                          nameInput.value = "";
+                          valInput.value = "";
+                        }
+                      }
+                    }}
+                  />
+                  <input
+                    type="text"
+                    id="new-field-value"
+                    placeholder="Value"
+                    className="w-20 bg-[#151515] border border-[#262626] rounded px-2 py-1 text-[10px] text-white outline-none"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        const nameInput = document.getElementById("new-field-name") as HTMLInputElement;
+                        const valInput = e.currentTarget;
+                        if (nameInput.value.trim() && valInput.value.trim()) {
+                          const newField = {
+                            id: `cf-${Date.now()}`,
+                            name: nameInput.value.trim(),
+                            value: valInput.value.trim()
+                          };
+                          const updated = [...(task.customFields || []), newField];
+                          updateTask(task.id, { customFields: updated });
+                          nameInput.value = "";
+                          valInput.value = "";
+                        }
+                      }
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const nameInput = document.getElementById("new-field-name") as HTMLInputElement;
+                      const valInput = document.getElementById("new-field-value") as HTMLInputElement;
+                      if (nameInput && valInput && nameInput.value.trim() && valInput.value.trim()) {
+                        const newField = {
+                          id: `cf-${Date.now()}`,
+                          name: nameInput.value.trim(),
+                          value: valInput.value.trim()
+                        };
+                        const updated = [...(task.customFields || []), newField];
+                        updateTask(task.id, { customFields: updated });
+                        nameInput.value = "";
+                        valInput.value = "";
+                      }
+                    }}
+                    className="px-2 bg-neutral-850 hover:bg-neutral-800 text-white rounded text-[10px] cursor-pointer"
+                  >
+                    +
+                  </button>
                 </div>
               </div>
 
