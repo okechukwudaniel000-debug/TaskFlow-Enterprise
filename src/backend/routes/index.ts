@@ -9,6 +9,7 @@ import organizationRoutes from "./organizationRoutes";
 import sprintRoutes from "./sprintRoutes";
 import automationRuleRoutes from "./automationRuleRoutes";
 import aiRoutes from "./aiRoutes";
+import searchRoutes from "./searchRoutes";
 import { rateLimiter } from "../middleware/rateLimiter";
 
 const apiRouter = Router();
@@ -26,5 +27,6 @@ apiRouter.use("/organizations", organizationRoutes);
 apiRouter.use("/sprints", sprintRoutes);
 apiRouter.use("/automations", automationRuleRoutes);
 apiRouter.use("/ai", aiRoutes);
+apiRouter.use("/search", searchRoutes);
 
 export default apiRouter;

@@ -381,6 +381,7 @@ function AppContent() {
         onClose={() => setIsCommandPaletteOpen(false)}
         onNavigate={setActiveView}
         onTriggerCreateTask={() => handleTriggerCreateTask(TaskStatus.TODO)}
+        onSelectTask={setSelectedTaskId}
       />
 
       {/* Create Issue Task Modal */}

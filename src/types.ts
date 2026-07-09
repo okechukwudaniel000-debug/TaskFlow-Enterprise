@@ -208,3 +208,14 @@ export interface Notification {
   type: "mention" | "assignment" | "status" | "general";
   createdAt: string;
 }
+
+export interface Document {
+  id: string;
+  title: string;
+  content: string;
+  authorId: string;
+  workspaceId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+

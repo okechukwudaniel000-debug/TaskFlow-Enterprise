@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 import { 
   User, Workspace, Project, Task, Notification, UserRole,
-  Organization, Sprint, AutomationRule 
+  Organization, Sprint, AutomationRule, Document
 } from "../../types";
 import { MOCK_USERS } from "../../features/auth/authStore";
 import { INITIAL_WORKSPACES } from "../../features/workspace/workspaceStore";
@@ -67,6 +67,36 @@ const INITIAL_AUTOMATION_RULES: AutomationRule[] = [
   }
 ];
 
+const INITIAL_DOCUMENTS: Document[] = [
+  {
+    id: "doc-1",
+    title: "TaskFlow Enterprise Security Protocols",
+    content: "All enterprise accounts must utilize Multi-Factor Authentication (MFA). Database access is restricted via VPC security rules and IAM roles. Audit logs are preserved for 180 days in hot storage. Users are prompted to verify credentials during sensitive settings edits.",
+    authorId: "user-1",
+    workspaceId: "ws-1",
+    createdAt: "2026-07-01T10:00:00.000Z",
+    updatedAt: "2026-07-01T10:00:00.000Z"
+  },
+  {
+    id: "doc-2",
+    title: "Sprint Planning & Kanban Workflow Guidelines",
+    content: "Sprints operate on 2-week intervals. Tasks must have priority and estimated hours defined before starting work. Subtasks should be created for tracking separate development phases. Comments must summarize active progress.",
+    authorId: "user-1",
+    workspaceId: "ws-1",
+    createdAt: "2026-07-01T11:30:00.000Z",
+    updatedAt: "2026-07-01T11:30:00.000Z"
+  },
+  {
+    id: "doc-3",
+    title: "AI Integrations & Automation Rules Handbook",
+    content: "TaskFlow triggers automation rules on status changes, checklist completion, or priority upgrades. Developers can configure specific webhooks. The server-side Gemini SDK is used for intelligent comments, priority suggestions, and workload analytics.",
+    authorId: "user-2",
+    workspaceId: "ws-1",
+    createdAt: "2026-07-02T09:15:00.000Z",
+    updatedAt: "2026-07-02T09:15:00.000Z"
+  }
+];
+
 export interface AuthProfile {
   userId: string;
   passwordHash: string;
@@ -108,6 +138,7 @@ interface DatabaseSchema {
   organizations: Organization[];
   sprints: Sprint[];
   automationRules: AutomationRule[];
+  documents: Document[];
 }
 
 class DatabaseManager {
@@ -125,6 +156,7 @@ class DatabaseManager {
       organizations: INITIAL_ORGANIZATIONS,
       sprints: INITIAL_SPRINTS,
       automationRules: INITIAL_AUTOMATION_RULES,
+      documents: INITIAL_DOCUMENTS,
     };
     this.load();
   }
@@ -146,6 +178,7 @@ class DatabaseManager {
             organizations: Array.isArray(parsed.organizations) ? parsed.organizations : INITIAL_ORGANIZATIONS,
             sprints: Array.isArray(parsed.sprints) ? parsed.sprints : INITIAL_SPRINTS,
             automationRules: Array.isArray(parsed.automationRules) ? parsed.automationRules : INITIAL_AUTOMATION_RULES,
+            documents: Array.isArray(parsed.documents) ? parsed.documents : INITIAL_DOCUMENTS,
           };
           console.log("Database successfully loaded from:", DB_FILE_PATH);
         }
@@ -204,6 +237,10 @@ class DatabaseManager {
   // AutomationRules CRUD
   get automationRules() { return this.data.automationRules; }
   set automationRules(val: AutomationRule[]) { this.data.automationRules = val; this.save(); }
+
+  // Documents CRUD
+  get documents() { return this.data.documents; }
+  set documents(val: Document[]) { this.data.documents = val; this.save(); }
 }
 
 export const db = new DatabaseManager();
