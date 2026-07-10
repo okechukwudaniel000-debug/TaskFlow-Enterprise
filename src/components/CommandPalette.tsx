@@ -283,11 +283,21 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-[#090909]/85 backdrop-blur-md z-50 flex items-start justify-center pt-[10vh] px-4 font-mono">
+    <div 
+      className="fixed inset-0 bg-[#090909]/85 backdrop-blur-md z-50 flex items-start justify-center pt-[10vh] px-4 font-mono"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="palette-title"
+    >
+      <h2 id="palette-title" className="sr-only">Command Palette</h2>
       
       {/* IMMERSIVE DOCUMENT REFERENCE OVERLAY */}
       {selectedDoc && (
-        <div className="fixed inset-0 bg-black/95 z-55 flex items-center justify-center p-6 animate-in fade-in duration-200">
+        <div 
+          className="fixed inset-0 bg-black/95 z-55 flex items-center justify-center p-6 animate-in fade-in duration-200"
+          role="dialog"
+          aria-modal="true"
+        >
           <div className={`bg-neutral-900 border ${colors.border} rounded-sm w-full max-w-2xl max-h-[85vh] flex flex-col overflow-hidden shadow-2xl relative`}>
             
             {/* Header */}
@@ -305,6 +315,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
                 onClick={() => setSelectedDoc(null)}
                 className="p-1.5 hover:bg-neutral-800 text-zinc-400 hover:text-white rounded-sm cursor-pointer transition-colors"
                 title="Back to search results"
+                aria-label="Close document"
               >
                 <X className="w-4.5 h-4.5" />
               </button>
@@ -362,20 +373,21 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
               }}
               placeholder="SEARCH OPERATIONS, TACTICS, DECK RECORDS, OR INTEL FILES..."
               className="w-full bg-transparent text-xs text-white placeholder-zinc-700 border-0 outline-none font-mono uppercase font-bold"
+              aria-label="Search command palette"
             />
             {isLoading && (
-              <Loader2 className="w-4 h-4 text-emerald-400 animate-spin shrink-0" />
+              <Loader2 className="w-4 h-4 text-emerald-400 animate-spin shrink-0" aria-label="Loading" />
             )}
-            <div className="flex items-center gap-1 shrink-0 font-mono text-[9px] bg-neutral-950 border border-white/[0.04] px-1.5 py-0.5 rounded-sm text-zinc-500 font-extrabold">
+            <div className="flex items-center gap-1 shrink-0 font-mono text-[9px] bg-neutral-950 border border-white/[0.04] px-1.5 py-0.5 rounded-sm text-zinc-500 font-extrabold" aria-hidden="true">
               ESC
             </div>
           </div>
 
           {/* Search Results List Feed */}
-          <div className="overflow-y-auto flex-1 p-3 space-y-1 max-h-[50vh] scrollbar-thin">
+          <div className="overflow-y-auto flex-1 p-3 space-y-1 max-h-[50vh] scrollbar-thin" role="listbox">
             {activeItems.length === 0 ? (
               <div className="p-12 text-center text-zinc-500 uppercase font-bold">
-                <div className="w-8 h-8 bg-black/40 border border-white/[0.04] text-zinc-600 rounded-sm flex items-center justify-center mx-auto mb-3">
+                <div className="w-8 h-8 bg-black/40 border border-white/[0.04] text-zinc-600 rounded-sm flex items-center justify-center mx-auto mb-3" aria-hidden="true">
                   <Search className="w-4 h-4" />
                 </div>
                 <p className="text-[10px] font-extrabold text-neutral-400">NO CORRESPONDING SECTORS LOCATED.</p>
@@ -393,8 +405,11 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
                 return (
                   <button
                     key={item.id}
+                    role="option"
+                    aria-selected={isSelected}
                     onClick={() => handleExecuteAction(item)}
                     onMouseEnter={() => setActiveIndex(index)}
+                    aria-label={`${item.title}, ${isNav ? item.category : item.type}`}
                     className={`w-full text-left flex items-start gap-3.5 p-3 rounded-sm transition-all duration-150 border outline-none cursor-pointer uppercase ${
                       isSelected 
                         ? "bg-neutral-800/80 border-emerald-600" 

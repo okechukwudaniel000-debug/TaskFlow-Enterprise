@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useEffect, useRef, Suspense, lazy } from "react";
+import { AnimatePresence, motion } from "motion/react";
 import { TaskFlowProvider, useTaskFlow } from "./contexts/TaskFlowContext";
 import { LoginRegister } from "./components/auth/LoginRegister";
 import { CommandPalette } from "./components/CommandPalette";
@@ -21,7 +22,7 @@ import { TaskDrawer } from "./components/TaskDrawer";
 import { TaskStatus } from "./types";
 import { useAuthStore } from "./features/auth/authStore";
 import { initSocket } from "./lib/socket";
-import { ToastProvider, Avatar } from "./components/ui";
+import { ToastProvider, Avatar, Breadcrumbs, QuickActions } from "./components/ui";
 import { MilitaryThemeProvider, useMilitaryTheme } from "./contexts/MilitaryThemeContext";
 import { TacticalBackground } from "./components/ui/TacticalBackground";
 
@@ -79,12 +80,18 @@ function AppContent() {
   const [newWsName, setNewWsName] = useState("");
   const [newWsDesc, setNewWsDesc] = useState("");
 
-  // Keyboard shortcut Ctrl+K listener
+  // Keyboard shortcut listener
   useEffect(() => {
     const handleGlobalShortcuts = (e: KeyboardEvent) => {
+      // Ctrl+K: Command Palette
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
         setIsCommandPaletteOpen(prev => !prev);
+      }
+      // N: New Task
+      if (e.key.toLowerCase() === "n" && !["INPUT", "TEXTAREA"].includes((e.target as HTMLElement).tagName)) {
+        e.preventDefault();
+        handleTriggerCreateTask(TaskStatus.TODO);
       }
     };
     window.addEventListener("keydown", handleGlobalShortcuts);
@@ -286,18 +293,17 @@ function AppContent() {
         <header className={`hidden md:flex h-14 bg-black/10 backdrop-blur-md border-b ${colors.border} items-center justify-between px-6 shrink-0 z-10 relative`}>
           
           {/* Breadcrumb path */}
-          <div className="flex items-center gap-2.5 text-[10px] font-mono font-bold tracking-wider uppercase text-zinc-400">
-            <span className="text-zinc-500">SECTOR</span>
-            <span className="text-zinc-600">/</span>
-            <span className="text-white">{currentWorkspace?.name}</span>
-            <span className="text-zinc-600">/</span>
-            <span className="text-emerald-400 capitalize">{activeView} VIEW</span>
-          </div>
+          <Breadcrumbs activeView={activeView} />
 
           {/* Quick command search bar and helper tooltip */}
           <div className="flex items-center gap-4">
             
             {/* Search Launcher button */}
+            <QuickActions 
+              onTriggerCreateTask={handleTriggerCreateTask} 
+              onNavigate={setActiveView} 
+            />
+            
             <button 
               onClick={() => setIsCommandPaletteOpen(true)}
               className={`px-3 py-1.5 bg-black/35 border ${colors.border} rounded-sm flex items-center gap-3 text-zinc-500 hover:text-neutral-300 hover:border-neutral-500 cursor-pointer text-[10px] font-mono tracking-wider transition-all outline-none focus:ring-1 focus:ring-emerald-500`}
@@ -325,39 +331,50 @@ function AppContent() {
               <span className="text-[10px] font-mono tracking-widest text-zinc-500 uppercase">RETRIEVING ENCRYPTED PARTITION...</span>
             </div>
           }>
-            {activeView === "dashboard" && (
-              <DashboardOverview 
-                onNavigateToView={setActiveView} 
-                onSelectTask={setSelectedTaskId} 
-              />
-            )}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeView}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
+                className="h-full"
+              >
+                {activeView === "dashboard" && (
+                  <DashboardOverview 
+                    onNavigateToView={setActiveView} 
+                    onSelectTask={setSelectedTaskId} 
+                  />
+                )}
 
-            {activeView === "board" && (
-              <KanbanBoard 
-                onSelectTask={setSelectedTaskId} 
-                onOpenCreateTask={handleTriggerCreateTask} 
-              />
-            )}
+                {activeView === "board" && (
+                  <KanbanBoard 
+                    onSelectTask={setSelectedTaskId} 
+                    onOpenCreateTask={handleTriggerCreateTask} 
+                  />
+                )}
 
-            {activeView === "projects" && (
-              <ProjectCatalog />
-            )}
+                {activeView === "projects" && (
+                  <ProjectCatalog />
+                )}
 
-            {activeView === "analytics" && (
-              <AnalyticsReport />
-            )}
+                {activeView === "analytics" && (
+                  <AnalyticsReport />
+                )}
 
-            {activeView === "team" && (
-              <TeamManagement />
-            )}
+                {activeView === "team" && (
+                  <TeamManagement />
+                )}
 
-            {activeView === "profile" && (
-              <UserProfileSettings />
-            )}
+                {activeView === "profile" && (
+                  <UserProfileSettings />
+                )}
 
-            {activeView === "performance" && (
-              <PerformanceSandbox />
-            )}
+                {activeView === "performance" && (
+                  <PerformanceSandbox />
+                )}
+              </motion.div>
+            </AnimatePresence>
           </Suspense>
         </div>
 

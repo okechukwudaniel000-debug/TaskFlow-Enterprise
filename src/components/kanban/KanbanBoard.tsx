@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useMemo } from "react";
+import { motion, AnimatePresence } from "motion/react";
 import { 
   Plus, Search, ArrowRight, CheckSquare, Layers, 
   ChevronRight, ChevronDown, Move, Eye, Folder, SlidersHorizontal, Trash2,
@@ -340,122 +341,129 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ onSelectTask, onOpenCr
                           <span className="uppercase tracking-widest">[ZONE EMPTY]</span>
                         </div>
                       ) : (
-                        columnTasks.map(t => {
-                          const taskAssignee = users.find(u => u.id === t.assigneeId);
-                          const isSelected = selectedTaskIds.includes(t.id);
+                        <AnimatePresence mode="popLayout">
+                          {columnTasks.map(t => {
+                            const taskAssignee = users.find(u => u.id === t.assigneeId);
+                            const isSelected = selectedTaskIds.includes(t.id);
 
-                          return (
-                            <div
-                              key={t.id}
-                              draggable
-                              onDragStart={(e) => handleDragStart(e, t.id)}
-                              onClick={() => {
-                                if (bulkSelectMode) {
-                                  toggleTaskSelection(t.id);
-                                } else {
-                                  onSelectTask(t.id);
-                                }
-                              }}
-                              className={`p-3.5 rounded-sm border transition-all duration-150 relative cursor-pointer group flex flex-col gap-3 ${
-                                isSelected
-                                  ? "bg-amber-950/20 border-amber-600/70 shadow-sm"
-                                  : draggedTaskId === t.id
-                                  ? "opacity-30 bg-black border-transparent"
-                                  : "bg-black/40 border-white/[0.03] hover:border-neutral-500 hover:bg-black/60 shadow"
-                              }`}
-                            >
-                              {/* Drag handle dots hover-only */}
-                              <div className="absolute right-2.5 top-2.5 opacity-0 group-hover:opacity-40 transition-opacity text-zinc-500">
-                                <Move className="w-3.5 h-3.5" />
-                              </div>
-
-                              {/* Task meta row */}
-                              <div className="flex items-center justify-between">
-                                <span className="text-[8px] font-mono font-bold text-zinc-500 tracking-wider">
-                                  ID: {t.id}
-                                </span>
-                                
-                                {bulkSelectMode && (
-                                  <input
-                                    type="checkbox"
-                                    checked={isSelected}
-                                    onChange={() => {}} // Swallowed for click wrapper
-                                    className="rounded-sm bg-neutral-900 border-neutral-800 text-amber-500 focus:ring-0 w-3.5 h-3.5 cursor-pointer shrink-0"
-                                  />
-                                )}
-                              </div>
-
-                              {/* Task Title */}
-                              <h5 className="text-xs font-mono font-bold text-white uppercase tracking-wide leading-relaxed line-clamp-2">
-                                {t.title}
-                              </h5>
-
-                              {/* Subtask / checklist counter row */}
-                              {(t.subtasks.length > 0 || t.checklist.length > 0) && (
-                                <div className="flex gap-2 items-center text-[9px] font-mono uppercase tracking-wider">
-                                  {t.subtasks.length > 0 && (
-                                    <span className="flex items-center gap-1 bg-[#1a221b]/40 border border-white/[0.02] px-1.5 py-0.5 rounded-sm text-zinc-400">
-                                      <CheckSquare className="w-3 h-3 text-zinc-500" />
-                                      <span>{t.subtasks.filter(s => s.isCompleted).length}/{t.subtasks.length} SECS</span>
-                                    </span>
-                                  )}
-                                  {t.checklist.length > 0 && (
-                                    <span className="flex items-center gap-1 bg-[#1a221b]/40 border border-white/[0.02] px-1.5 py-0.5 rounded-sm text-[#76df91]">
-                                      <CheckSquare className="w-3 h-3 text-emerald-500" />
-                                      <span>{t.checklist.filter(i => i.isCompleted).length}/{t.checklist.length} QA</span>
-                                    </span>
-                                  )}
+                            return (
+                              <motion.div
+                                key={t.id}
+                                layout
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.9 }}
+                                whileHover={{ y: -2 }}
+                                draggable
+                                onDragStart={(e) => handleDragStart(e, t.id)}
+                                onClick={() => {
+                                  if (bulkSelectMode) {
+                                    toggleTaskSelection(t.id);
+                                  } else {
+                                    onSelectTask(t.id);
+                                  }
+                                }}
+                                className={`p-3.5 rounded-sm border transition-all duration-150 relative cursor-pointer group flex flex-col gap-3 ${
+                                  isSelected
+                                    ? "bg-amber-950/20 border-amber-600/70 shadow-sm"
+                                    : draggedTaskId === t.id
+                                    ? "opacity-30 bg-black border-transparent"
+                                    : "bg-black/40 border-white/[0.03] hover:border-neutral-500 hover:bg-black/60 shadow"
+                                }`}
+                              >
+                                {/* Drag handle dots hover-only */}
+                                <div className="absolute right-2.5 top-2.5 opacity-0 group-hover:opacity-40 transition-opacity text-zinc-500">
+                                  <Move className="w-3.5 h-3.5" />
                                 </div>
-                              )}
 
-                              {/* Tags list row */}
-                              {t.tags.length > 0 && (
-                                <div className="flex flex-wrap gap-1">
-                                  {t.tags.slice(0, 3).map((tag, idx) => (
-                                    <span key={idx} className="text-[8px] bg-black/40 border border-white/[0.03] px-1.5 py-0.5 rounded-sm text-zinc-400 font-mono tracking-wider uppercase">
-                                      {tag}
-                                    </span>
-                                  ))}
-                                </div>
-                              )}
-
-                              {/* Footer parameters row */}
-                              <div className="flex justify-between items-center pt-2.5 border-t border-white/[0.02] shrink-0">
-                                
-                                {/* Color-coded Priority Badge */}
-                                <span className={`text-[8px] font-mono font-bold uppercase tracking-widest px-1.5 py-0.5 rounded-sm border ${
-                                  t.priority === TaskPriority.CRITICAL 
-                                    ? "bg-red-950/40 text-red-400 border-red-800/40" 
-                                    : t.priority === TaskPriority.HIGH 
-                                    ? "bg-amber-950/40 text-amber-400 border-amber-850/40"
-                                    : t.priority === TaskPriority.MEDIUM
-                                    ? "bg-sky-950/40 text-sky-400 border-sky-800/40"
-                                    : "bg-neutral-900 text-zinc-400 border-neutral-800"
-                                }`}>
-                                  {t.priority}
-                                </span>
-
-                                {/* Assignee Avatar */}
-                                <div className="flex items-center gap-1.5">
-                                  {taskAssignee ? (
-                                    <img 
-                                      src={taskAssignee.avatar} 
-                                      alt={taskAssignee.name} 
-                                      title={`Assigned callsign ${taskAssignee.name}`}
-                                      className="w-5 h-5 rounded-full object-cover border border-white/[0.06]"
-                                      referrerPolicy="no-referrer"
+                                {/* Task meta row */}
+                                <div className="flex items-center justify-between">
+                                  <span className="text-[8px] font-mono font-bold text-zinc-500 tracking-wider">
+                                    ID: {t.id}
+                                  </span>
+                                  
+                                  {bulkSelectMode && (
+                                    <input
+                                      type="checkbox"
+                                      checked={isSelected}
+                                      onChange={() => {}} // Swallowed for click wrapper
+                                      className="rounded-sm bg-neutral-900 border-neutral-800 text-amber-500 focus:ring-0 w-3.5 h-3.5 cursor-pointer shrink-0"
                                     />
-                                  ) : (
-                                    <div className="w-5 h-5 rounded-full bg-neutral-900 flex items-center justify-center text-zinc-500 border border-white/[0.03] text-[8px] font-mono font-bold">
-                                      UA
-                                    </div>
                                   )}
                                 </div>
 
-                              </div>
-                            </div>
-                          );
-                        })
+                                {/* Task Title */}
+                                <h5 className="text-xs font-mono font-bold text-white uppercase tracking-wide leading-relaxed line-clamp-2">
+                                  {t.title}
+                                </h5>
+
+                                {/* Subtask / checklist counter row */}
+                                {(t.subtasks.length > 0 || t.checklist.length > 0) && (
+                                  <div className="flex gap-2 items-center text-[9px] font-mono uppercase tracking-wider">
+                                    {t.subtasks.length > 0 && (
+                                      <span className="flex items-center gap-1 bg-[#1a221b]/40 border border-white/[0.02] px-1.5 py-0.5 rounded-sm text-zinc-400">
+                                        <CheckSquare className="w-3 h-3 text-zinc-500" />
+                                        <span>{t.subtasks.filter(s => s.isCompleted).length}/{t.subtasks.length} SECS</span>
+                                      </span>
+                                    )}
+                                    {t.checklist.length > 0 && (
+                                      <span className="flex items-center gap-1 bg-[#1a221b]/40 border border-white/[0.02] px-1.5 py-0.5 rounded-sm text-[#76df91]">
+                                        <CheckSquare className="w-3 h-3 text-emerald-500" />
+                                        <span>{t.checklist.filter(i => i.isCompleted).length}/{t.checklist.length} QA</span>
+                                      </span>
+                                    )}
+                                  </div>
+                                )}
+
+                                {/* Tags list row */}
+                                {t.tags.length > 0 && (
+                                  <div className="flex flex-wrap gap-1">
+                                    {t.tags.slice(0, 3).map((tag, idx) => (
+                                      <span key={idx} className="text-[8px] bg-black/40 border border-white/[0.03] px-1.5 py-0.5 rounded-sm text-zinc-400 font-mono tracking-wider uppercase">
+                                        {tag}
+                                      </span>
+                                    ))}
+                                  </div>
+                                )}
+
+                                {/* Footer parameters row */}
+                                <div className="flex justify-between items-center pt-2.5 border-t border-white/[0.02] shrink-0">
+                                  
+                                  {/* Color-coded Priority Badge */}
+                                  <span className={`text-[8px] font-mono font-bold uppercase tracking-widest px-1.5 py-0.5 rounded-sm border ${
+                                    t.priority === TaskPriority.CRITICAL 
+                                      ? "bg-red-950/40 text-red-400 border-red-800/40" 
+                                      : t.priority === TaskPriority.HIGH 
+                                      ? "bg-amber-950/40 text-amber-400 border-amber-850/40"
+                                      : t.priority === TaskPriority.MEDIUM
+                                      ? "bg-sky-950/40 text-sky-400 border-sky-800/40"
+                                      : "bg-neutral-900 text-zinc-400 border-neutral-800"
+                                  }`}>
+                                    {t.priority}
+                                  </span>
+
+                                  {/* Assignee Avatar */}
+                                  <div className="flex items-center gap-1.5">
+                                    {taskAssignee ? (
+                                      <img 
+                                        src={taskAssignee.avatar} 
+                                        alt={taskAssignee.name} 
+                                        title={`Assigned callsign ${taskAssignee.name}`}
+                                        className="w-5 h-5 rounded-full object-cover border border-white/[0.06]"
+                                        referrerPolicy="no-referrer"
+                                      />
+                                    ) : (
+                                      <div className="w-5 h-5 rounded-full bg-neutral-900 flex items-center justify-center text-zinc-500 border border-white/[0.03] text-[8px] font-mono font-bold">
+                                        UA
+                                      </div>
+                                    )}
+                                  </div>
+
+                                </div>
+                              </motion.div>
+                            );
+                          })}
+                        </AnimatePresence>
                       )}
                     </div>
                   )}

@@ -12,4 +12,6 @@ export * from "./Table";
 export * from "./Toast";
 export * from "./Avatar";
 export * from "./Tooltip";
+export * from "./Breadcrumbs";
+export * from "./QuickActions";
 export { ToastProvider, useToast } from "./Toast";
