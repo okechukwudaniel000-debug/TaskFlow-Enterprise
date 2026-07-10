@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect, Suspense, lazy } from "react";
+import React, { useState, useEffect, useRef, Suspense, lazy } from "react";
 import { TaskFlowProvider, useTaskFlow } from "./contexts/TaskFlowContext";
 import { LoginRegister } from "./components/auth/LoginRegister";
 import { CommandPalette } from "./components/CommandPalette";
@@ -48,6 +48,24 @@ function AppContent() {
   
   // Mobile UI Sidebar toggle
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const sidebarRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const handleOutsideClick = (event: MouseEvent) => {
+      if (
+        isMobileSidebarOpen &&
+        sidebarRef.current &&
+        !sidebarRef.current.contains(event.target as Node)
+      ) {
+        setIsMobileSidebarOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+    };
+  }, [isMobileSidebarOpen]);
 
   // Modal Dialog states
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
@@ -135,7 +153,9 @@ function AppContent() {
       </div>
 
       {/* 2. PERSISTENT ENTERPRISE SIDEBAR PANEL (TACTICAL RAIL) */}
-      <aside className={`
+      <aside 
+        ref={sidebarRef}
+        className={`
         fixed md:sticky top-0 left-0 h-screen w-64 ${colors.bgPanel} border-r ${colors.border} flex flex-col justify-between shrink-0 z-30 transition-transform duration-200 md:translate-x-0
         ${isMobileSidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
       `}>
