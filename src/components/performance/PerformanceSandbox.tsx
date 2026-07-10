@@ -12,8 +12,9 @@ import { apiFetch } from "../../features/auth/authStore";
 import { DesignSystemPlayground } from "./DesignSystemPlayground";
 import { 
   Cpu, Terminal, Database, Activity, RefreshCw, AlertTriangle, 
-  Clock, Flame, Send, Info, ChevronRight, Play, Server, Trash, ListRestart
+  Clock, Flame, Send, Info, Server, ListRestart
 } from "lucide-react";
+import { useMilitaryTheme } from "../../contexts/MilitaryThemeContext";
 
 interface LogEvent {
   id: string;
@@ -29,6 +30,8 @@ interface LogEvent {
 
 export const PerformanceSandbox: React.FC = () => {
   const queryClient = useQueryClient();
+  const { colors } = useMilitaryTheme();
+  
   const [search, setSearch] = useState("");
   const [latency, setLatency] = useState(150);
   const [simulateError, setSimulateError] = useState(false);
@@ -67,7 +70,6 @@ export const PerformanceSandbox: React.FC = () => {
     isFetching, 
     error, 
     refetch,
-    dataUpdatedAt
   } = useQuery({
     queryKey: ["performance-logs-paginated", page, search, latency],
     queryFn: () => fetchLogs(page, search, latency),
@@ -232,64 +234,66 @@ export const PerformanceSandbox: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 font-sans">
+    <div className="space-y-6 font-mono relative z-10">
       
       {/* Upper Grid: CPU/Engine Health visualizers */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
         
         {/* Metric 1 */}
-        <div className="bg-[#0b0b0b] border border-neutral-800 rounded-xl p-4 flex items-center gap-4 shadow shadow-black/40">
-          <div className="p-3 bg-blue-950/40 border border-blue-500/20 text-blue-400 rounded-lg shrink-0">
+        <div className={`bg-black/35 border ${colors.border} rounded-sm p-4 flex items-center gap-4 shadow shadow-black`}>
+          <div className="p-3 bg-emerald-500/10 border border-emerald-600/20 text-emerald-400 rounded-sm shrink-0">
             <Cpu className="w-5 h-5 animate-pulse" />
           </div>
-          <div className="min-w-0 flex-1">
-            <span className="text-[10px] font-mono tracking-wider uppercase text-zinc-500 block">Query Engine Cache</span>
-            <span className="text-lg font-bold text-white block mt-0.5">Active</span>
-            <span className="text-[10px] font-mono text-emerald-400 flex items-center gap-1 mt-1">
+          <div className="min-w-0 flex-1 text-[10px]">
+            <span className="font-bold tracking-widest uppercase text-zinc-500 block">CACHE_ENGINE</span>
+            <span className="text-sm font-extrabold text-white block mt-0.5 uppercase">ACTIVE STATUS</span>
+            <span className="font-mono text-emerald-400 flex items-center gap-1 mt-1 text-[9px] font-extrabold">
               <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-ping" />
-              staleTime: 10s | gcTime: 60s
+              STALE: 10S | GC: 60S
             </span>
           </div>
         </div>
 
         {/* Metric 2 */}
-        <div className="bg-[#0b0b0b] border border-neutral-800 rounded-xl p-4 flex items-center gap-4 shadow shadow-black/40">
-          <div className="p-3 bg-purple-950/40 border border-purple-500/20 text-purple-400 rounded-lg shrink-0">
+        <div className={`bg-black/35 border ${colors.border} rounded-sm p-4 flex items-center gap-4 shadow shadow-black`}>
+          <div className="p-3 bg-emerald-500/10 border border-emerald-600/20 text-emerald-400 rounded-sm shrink-0">
             <Database className="w-5 h-5" />
           </div>
-          <div className="min-w-0 flex-1">
-            <span className="text-[10px] font-mono tracking-wider uppercase text-zinc-500 block">Deduplicated Requests</span>
-            <span className="text-lg font-bold text-white block mt-0.5">{dedupClicks > 0 ? `${dedupClicks} triggers` : "Standing by"}</span>
-            <span className="text-[10px] font-mono text-purple-400 block mt-1">
-              Deduplicated in-flight fetches
+          <div className="min-w-0 flex-1 text-[10px]">
+            <span className="font-bold tracking-widest uppercase text-zinc-500 block">DEDUP_IN_FLIGHT</span>
+            <span className="text-sm font-extrabold text-white block mt-0.5 uppercase">
+              {dedupClicks > 0 ? `${dedupClicks} INITIATIONS` : "IDLE / STANDBY"}
+            </span>
+            <span className="font-mono text-zinc-400 block mt-1 text-[9px] uppercase font-bold">
+              Rapid merging engines active
             </span>
           </div>
         </div>
 
         {/* Metric 3 */}
-        <div className="bg-[#0b0b0b] border border-neutral-800 rounded-xl p-4 flex items-center gap-4 shadow shadow-black/40">
-          <div className="p-3 bg-amber-950/40 border border-amber-500/20 text-amber-400 rounded-lg shrink-0">
+        <div className={`bg-black/35 border ${colors.border} rounded-sm p-4 flex items-center gap-4 shadow shadow-black`}>
+          <div className="p-3 bg-emerald-500/10 border border-emerald-600/20 text-emerald-400 rounded-sm shrink-0">
             <Activity className="w-5 h-5" />
           </div>
-          <div className="min-w-0 flex-1">
-            <span className="text-[10px] font-mono tracking-wider uppercase text-zinc-500 block">Direct Engine Fetches</span>
-            <span className="text-lg font-bold text-white block mt-0.5">{networkRequestsCount} fetches</span>
-            <span className="text-[10px] font-mono text-zinc-500 block mt-1">
-              Server-side hits tracked
+          <div className="min-w-0 flex-1 text-[10px]">
+            <span className="font-bold tracking-widest uppercase text-zinc-500 block">RAW_FETCHE_HITS</span>
+            <span className="text-sm font-extrabold text-white block mt-0.5 uppercase">{networkRequestsCount} COUNTERED</span>
+            <span className="font-mono text-zinc-500 block mt-1 text-[9px] uppercase font-bold">
+              Direct telemetry inquiries
             </span>
           </div>
         </div>
 
         {/* Metric 4 */}
-        <div className="bg-[#0b0b0b] border border-neutral-800 rounded-xl p-4 flex items-center gap-4 shadow shadow-black/40">
-          <div className="p-3 bg-emerald-950/40 border border-emerald-500/20 text-emerald-400 rounded-lg shrink-0">
+        <div className={`bg-black/35 border ${colors.border} rounded-sm p-4 flex items-center gap-4 shadow shadow-black`}>
+          <div className="p-3 bg-emerald-500/10 border border-emerald-600/20 text-emerald-400 rounded-sm shrink-0">
             <Clock className="w-5 h-5" />
           </div>
-          <div className="min-w-0 flex-1">
-            <span className="text-[10px] font-mono tracking-wider uppercase text-zinc-500 block">Last Trip Latency</span>
-            <span className="text-lg font-bold text-white block mt-0.5">{lastFetchDuration > 0 ? `${lastFetchDuration}ms` : "N/A"}</span>
-            <span className="text-[10px] font-mono text-zinc-500 block mt-1">
-              Reflects latency query injects
+          <div className="min-w-0 flex-1 text-[10px]">
+            <span className="font-bold tracking-widest uppercase text-zinc-500 block">SAT_TRIP_LATENCY</span>
+            <span className="text-sm font-extrabold text-white block mt-0.5 uppercase">{lastFetchDuration > 0 ? `${lastFetchDuration}MS` : "STATIC"}</span>
+            <span className="font-mono text-zinc-500 block mt-1 text-[9px] uppercase font-bold">
+              Injectable latency parameters
             </span>
           </div>
         </div>
@@ -297,57 +301,59 @@ export const PerformanceSandbox: React.FC = () => {
       </div>
 
       {/* Main interactive tabs */}
-      <div className="bg-[#0b0b0b] border border-neutral-800 rounded-xl overflow-hidden shadow-xl">
-        <div className="flex border-b border-neutral-800 bg-[#111111]/70 px-4 pt-3.5 gap-2 shrink-0 overflow-x-auto scrollbar-none">
+      <div className={`bg-black/35 border ${colors.border} rounded-sm overflow-hidden shadow-xl`}>
+        
+        {/* Tab selection */}
+        <div className={`flex border-b ${colors.borderMuted} bg-black/45 px-4 pt-3.5 gap-2 shrink-0 overflow-x-auto scrollbar-none`}>
           <button 
             onClick={() => setActiveTab("cache")}
-            className={`px-4.5 py-2.5 text-xs font-semibold rounded-t-lg border-t-2 transition-all cursor-pointer whitespace-nowrap ${
+            className={`px-4.5 py-2.5 text-[9px] tracking-widest font-extrabold uppercase rounded-t-sm border-t-2 transition-all cursor-pointer whitespace-nowrap ${
               activeTab === "cache"
-                ? "bg-[#0b0b0b] text-blue-400 border-blue-500" 
+                ? "bg-neutral-900 text-emerald-400 border-emerald-600" 
                 : "text-zinc-500 border-transparent hover:text-white"
             }`}
           >
-            API Cache & Deduplication Test
+            CACHING & MERGING RECON
           </button>
           <button 
             onClick={() => setActiveTab("virtual")}
-            className={`px-4.5 py-2.5 text-xs font-semibold rounded-t-lg border-t-2 transition-all cursor-pointer whitespace-nowrap ${
+            className={`px-4.5 py-2.5 text-[9px] tracking-widest font-extrabold uppercase rounded-t-sm border-t-2 transition-all cursor-pointer whitespace-nowrap ${
               activeTab === "virtual"
-                ? "bg-[#0b0b0b] text-blue-400 border-blue-500" 
+                ? "bg-neutral-900 text-emerald-400 border-emerald-600" 
                 : "text-zinc-500 border-transparent hover:text-white"
             }`}
           >
-            Infinite Scroll Virtualizer (5k Logs)
+            5,000 STREAM SCROLLER VIRTUAL
           </button>
           <button 
             onClick={() => setActiveTab("design")}
-            className={`px-4.5 py-2.5 text-xs font-semibold rounded-t-lg border-t-2 transition-all cursor-pointer whitespace-nowrap ${
+            className={`px-4.5 py-2.5 text-[9px] tracking-widest font-extrabold uppercase rounded-t-sm border-t-2 transition-all cursor-pointer whitespace-nowrap ${
               activeTab === "design"
-                ? "bg-[#0b0b0b] text-blue-400 border-blue-500" 
+                ? "bg-neutral-900 text-emerald-400 border-emerald-600" 
                 : "text-zinc-500 border-transparent hover:text-white"
             }`}
           >
-            UI Design System Playground
+            TACTICAL DESIGN MATRIX
           </button>
         </div>
 
         {/* TAB Content 1: API Cache & Deduplication Panel */}
         {activeTab === "cache" && (
-          <div className="p-5 space-y-5">
+          <div className="p-5 space-y-5 animate-in fade-in duration-200">
             
             <div className="flex flex-col lg:flex-row gap-5">
               
               {/* Controls Form */}
-              <div className="flex-1 bg-neutral-900/40 border border-neutral-800 p-4.5 rounded-lg space-y-4">
-                <h4 className="text-xs font-bold font-mono uppercase text-zinc-400 flex items-center gap-2">
-                  <Terminal className="w-4 h-4 text-zinc-500" />
-                  <span>Sandbox Controls</span>
+              <div className={`flex-1 bg-black/40 border ${colors.borderMuted} p-5 rounded-sm space-y-4`}>
+                <h4 className="text-[10px] font-extrabold uppercase tracking-widest text-emerald-400 flex items-center gap-2">
+                  <Terminal className="w-4 h-4" />
+                  <span>[HQ SECURE] CORE REGULATION CONSOLE</span>
                 </h4>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Search query input */}
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-mono text-zinc-500 uppercase block">Fuzzy Logs Filter</label>
+                    <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block">FUZZY LOGS SECTOR FILTER</label>
                     <input 
                       type="text" 
                       value={search}
@@ -355,58 +361,58 @@ export const PerformanceSandbox: React.FC = () => {
                         setSearch(e.target.value);
                         setPage(1);
                       }}
-                      placeholder="e.g. Database, Ingress..."
-                      className="w-full bg-[#0b0b0b] border border-neutral-800 px-3 py-1.5 rounded text-xs text-neutral-200 placeholder-zinc-700 outline-none focus:border-neutral-600 font-mono"
+                      placeholder="e.g. DATABASE, INGRESS, AUTH..."
+                      className={`w-full bg-black/40 border ${colors.border} rounded-sm px-3 py-2 text-xs text-white placeholder-zinc-700 outline-none focus:border-neutral-500 uppercase font-bold`}
                     />
                   </div>
 
                   {/* Network Latency injector */}
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-mono text-zinc-500 uppercase block">Inject Client Latency: {latency}ms</label>
+                    <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block">INJECTED TELEMETRY LATENCY: {latency}MS</label>
                     <input 
                       type="range" 
                       min="10" 
                       max="1500" 
                       value={latency}
                       onChange={(e) => setLatency(Number(e.target.value))}
-                      className="w-full bg-[#0b0b0b] h-1.5 rounded cursor-pointer accent-blue-500"
+                      className="w-full bg-black/40 h-1 rounded-sm cursor-pointer accent-emerald-500"
                     />
-                    <div className="flex justify-between text-[8px] font-mono text-zinc-600">
-                      <span>10ms (Local)</span>
-                      <span>1.5s (Cloud Satellite)</span>
+                    <div className="flex justify-between text-[8px] font-mono text-zinc-600 font-extrabold uppercase tracking-wider mt-0.5">
+                      <span>10MS (HQ INTEGRATED)</span>
+                      <span>1.5S (SATELLITE DOWNLINK)</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Optimistic Error toggle */}
-                <div className="bg-[#121212] border border-neutral-800 p-3 rounded flex items-center justify-between gap-4">
+                <div className={`bg-black/30 border ${colors.border} p-3 rounded-sm flex items-center justify-between gap-4`}>
                   <div>
-                    <span className="text-xs font-bold text-neutral-200 block">Simulate DB Write Lock Error</span>
-                    <span className="text-[10px] font-mono text-zinc-500 block mt-0.5">Triggers server 500 error to test optimistic transaction rollback.</span>
+                    <span className="text-[10px] font-extrabold text-white block uppercase tracking-wide">SIMULATE DB WRITE BLOCK TIMEOUT</span>
+                    <span className="text-[9px] text-zinc-500 block mt-0.5 uppercase">Triggers simulated 500 error parameters to evaluate transaction rollback.</span>
                   </div>
                   <button 
                     onClick={() => setSimulateError(prev => !prev)}
-                    className={`px-3 py-1 rounded text-[10px] font-bold uppercase transition-all ${
+                    className={`px-3 py-1.5 rounded-sm text-[9px] font-extrabold tracking-widest uppercase transition-all cursor-pointer ${
                       simulateError 
-                        ? "bg-red-950/60 border border-red-500/40 text-red-400" 
-                        : "bg-neutral-800 border border-neutral-750 text-zinc-400 hover:text-white"
+                        ? "bg-red-950 border border-red-800 text-red-400" 
+                        : "bg-neutral-900 border border-neutral-700 text-zinc-400 hover:text-white"
                     }`}
                   >
-                    {simulateError ? "Active (Error)" : "Bypassed (Success)"}
+                    {simulateError ? "ENGAGED" : "BYPASSED"}
                   </button>
                 </div>
 
                 {/* React Query performance inspection */}
-                <div className="space-y-2 pt-1 border-t border-neutral-800/60">
-                  <span className="text-[10px] font-mono text-zinc-500 uppercase block">Query Execution Diagnostics</span>
-                  <div className="grid grid-cols-2 gap-2 text-[10px] font-mono text-zinc-400">
-                    <div className="p-2 bg-neutral-900 border border-neutral-800/80 rounded flex justify-between">
-                      <span>Status:</span>
-                      <span className="text-blue-400 font-bold">{isFetching ? "fetching..." : "cached"}</span>
+                <div className="space-y-2 pt-1 border-t border-white/[0.04]">
+                  <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block">ENGINE CONSOLE EVALUATION DIAGNOSTICS</span>
+                  <div className="grid grid-cols-2 gap-2 text-[9px] uppercase font-bold">
+                    <div className={`p-2.5 bg-black/40 border ${colors.border} rounded-sm flex justify-between`}>
+                      <span className="text-zinc-500">ENGINE STATUS:</span>
+                      <span className="text-emerald-400">{isFetching ? "STREAMING..." : "RESOLVED"}</span>
                     </div>
-                    <div className="p-2 bg-neutral-900 border border-neutral-800/80 rounded flex justify-between">
-                      <span>Cache State:</span>
-                      <span className="text-emerald-400 font-bold">Stale in 10s</span>
+                    <div className={`p-2.5 bg-black/40 border ${colors.border} rounded-sm flex justify-between`}>
+                      <span className="text-zinc-500">CACHE PERSIST:</span>
+                      <span className="text-emerald-400">FRESH FOR 10S</span>
                     </div>
                   </div>
                 </div>
@@ -415,10 +421,10 @@ export const PerformanceSandbox: React.FC = () => {
                 <div className="flex gap-2">
                   <button 
                     onClick={triggerDeduplicationTest}
-                    className="flex-1 bg-blue-600 hover:bg-blue-500 border border-blue-500/30 text-white text-xs font-medium py-2 px-3 rounded flex items-center justify-center gap-2 transition-all cursor-pointer shadow shadow-blue-900/10"
+                    className="flex-1 bg-emerald-800 hover:bg-emerald-700 border border-emerald-600 text-white text-[10px] tracking-widest font-extrabold py-2.5 px-4 rounded-sm flex items-center justify-center gap-2 transition-colors cursor-pointer shadow shadow-black active:scale-95"
                   >
-                    <RefreshCw className={`w-4 h-4 ${isFetching ? "animate-spin" : ""}`} />
-                    <span>Deduplicate Rapid Fetches</span>
+                    <RefreshCw className={`w-3.5 h-3.5 ${isFetching ? "animate-spin" : ""}`} />
+                    <span>DEDUPLICATE RAPID INQUIRIES</span>
                   </button>
                   
                   <button 
@@ -427,8 +433,8 @@ export const PerformanceSandbox: React.FC = () => {
                       setNetworkRequestsCount(0);
                       setDedupClicks(0);
                     }}
-                    title="Clear query client caches and stats counters"
-                    className="bg-[#1c1c1c] hover:bg-[#252525] border border-neutral-800 p-2 text-zinc-400 hover:text-white rounded transition-colors cursor-pointer"
+                    title="Clear registers and analytics state counters"
+                    className={`bg-neutral-900 hover:bg-neutral-800 border ${colors.border} p-2.5 text-zinc-500 hover:text-white rounded-sm transition-colors cursor-pointer`}
                   >
                     <ListRestart className="w-4 h-4" />
                   </button>
@@ -437,25 +443,25 @@ export const PerformanceSandbox: React.FC = () => {
               </div>
 
               {/* Explainer Console */}
-              <div className="w-full lg:w-80 bg-[#0d0d0d] border border-neutral-800 p-4 rounded-lg flex flex-col justify-between shrink-0 font-mono text-[11px] leading-relaxed text-zinc-400">
+              <div className={`w-full lg:w-80 bg-black/40 border ${colors.borderMuted} p-5 rounded-sm flex flex-col justify-between shrink-0 text-[10px] leading-relaxed text-zinc-400 uppercase`}>
                 <div className="space-y-3">
-                  <span className="text-xs font-bold text-neutral-300 flex items-center gap-1.5">
-                    <Server className="w-4 h-4 text-blue-400" />
-                    <span>Engine Explainer</span>
+                  <span className="text-[10px] font-extrabold text-white flex items-center gap-1.5 tracking-widest">
+                    <Server className="w-4 h-4 text-emerald-400" />
+                    <span>TELEMETRY GUIDANCE</span>
                   </span>
                   
-                  <p className="text-[10px] leading-relaxed">
-                    <strong className="text-neutral-300">Request Deduplication:</strong> Clicking the <span className="text-blue-400">Deduplicate</span> button triggers 5 rapid updates. Look at the <span className="text-amber-400">Direct Engine Fetches</span> counter; it increments by exactly <strong className="text-white">1</strong> because duplicates are merged in-flight.
+                  <p className="text-[9px] leading-relaxed">
+                    <strong className="text-zinc-200">Request Deduplication:</strong> Rapidly triggering telemetry requests maps overlapping tasks. The system bundles them, resulting in exactly <strong className="text-emerald-400">1 raw engine call</strong>.
                   </p>
 
-                  <p className="text-[10px] leading-relaxed">
-                    <strong className="text-neutral-300">API Caching:</strong> Flipping pagination pages caches their content. Returning to previously scanned pages fetches instantly with <strong className="text-white">0ms</strong> delay because they are resolved straight from cache.
+                  <p className="text-[9px] leading-relaxed">
+                    <strong className="text-zinc-200">Cache Persistence:</strong> Stepping through data structures logs entries inside local scopes. Re-reading sectors retrieves data at <strong className="text-emerald-400">0ms latency</strong>, utilizing in-memory structures.
                   </p>
                 </div>
 
-                <div className="bg-[#111111] p-3 border border-neutral-800 rounded mt-4 text-[9px] text-zinc-600">
+                <div className="bg-neutral-950 p-3 border border-white/[0.04] rounded-sm mt-4 text-[8px] text-zinc-600 font-extrabold tracking-wider">
                   <Info className="w-4 h-4 text-zinc-500 inline mr-1.5 shrink-0" />
-                  Cache snapshots are synced client-wide instantly.
+                  Telemetry records are shared client-wide instantly.
                 </div>
               </div>
 
@@ -465,26 +471,26 @@ export const PerformanceSandbox: React.FC = () => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
               
               {/* Left Column: Paginated Logs (2/3) */}
-              <div className="lg:col-span-2 border border-neutral-800 bg-black/40 rounded-lg overflow-hidden flex flex-col max-h-[450px]">
-                <div className="px-4 py-3 bg-[#111111] border-b border-neutral-800 flex justify-between items-center shrink-0">
-                  <span className="text-xs font-bold text-neutral-200">System Logs Grid ({stats.total} total)</span>
-                  <span className="text-[10px] text-zinc-500 font-mono">Page {stats.page} of {stats.totalPages}</span>
+              <div className={`lg:col-span-2 border ${colors.border} bg-black/35 rounded-sm overflow-hidden flex flex-col max-h-[450px]`}>
+                <div className="px-4 py-3 bg-neutral-900/60 border-b border-white/[0.04] flex justify-between items-center shrink-0">
+                  <span className="text-[10px] font-extrabold text-white uppercase tracking-widest">ACTIVE REGISTRATION DECK ({stats.total} TOTAL)</span>
+                  <span className="text-[9px] text-zinc-500 font-bold uppercase">PAGE {stats.page} OF {stats.totalPages}</span>
                 </div>
 
-                <div className="flex-1 overflow-y-auto divide-y divide-neutral-900 min-h-[250px]">
+                <div className="flex-1 overflow-y-auto divide-y divide-white/[0.02] min-h-[250px] scrollbar-thin">
                   {isLoading ? (
                     <div className="p-20 text-center flex flex-col items-center justify-center gap-3">
-                      <div className="w-6 h-6 border-2 border-t-blue-500 border-neutral-850 rounded-full animate-spin" />
-                      <span className="text-xs font-mono text-zinc-500">Querying API thread...</span>
+                      <div className="w-6 h-6 border-2 border-t-emerald-500 border-neutral-900 rounded-full animate-spin" />
+                      <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">SCANNING COMS REGISTERS...</span>
                     </div>
                   ) : error ? (
-                    <div className="p-16 text-center text-red-400 flex flex-col items-center gap-2">
+                    <div className="p-16 text-center text-red-400 flex flex-col items-center gap-2 uppercase">
                       <AlertTriangle className="w-6 h-6" />
-                      <span className="text-xs font-mono">Error querying server: {error.message}</span>
+                      <span className="text-[10px] font-bold">Telemetry Error: {error.message}</span>
                     </div>
                   ) : logs.length === 0 ? (
-                    <div className="p-20 text-center text-zinc-600 text-xs font-mono">
-                      No matching log records found in cache indexes.
+                    <div className="p-20 text-center text-zinc-600 text-[10px] uppercase font-bold">
+                      No active registry parameters located.
                     </div>
                   ) : (
                     logs.map(log => {
@@ -497,33 +503,33 @@ export const PerformanceSandbox: React.FC = () => {
                             setCommentText("");
                           }}
                           className={`p-3 text-xs flex items-start gap-3 cursor-pointer select-none transition-colors ${
-                            isSelected ? "bg-[#141414] border-l-2 border-blue-500" : "hover:bg-[#111111]/40"
+                            isSelected ? "bg-neutral-900 border-l-2 border-emerald-500" : "hover:bg-white/[0.01]"
                           }`}
                         >
-                          <span className={`px-1.5 py-0.2 rounded font-mono text-[9px] uppercase tracking-wider shrink-0 font-bold ${
+                          <span className={`px-1.5 py-0.5 rounded-sm font-mono text-[8px] uppercase tracking-wider shrink-0 font-extrabold ${
                             log.status === "SUCCESS" 
-                              ? "bg-emerald-950/50 text-emerald-400 border border-emerald-900/30" 
-                              : "bg-amber-950/50 text-amber-400 border border-amber-900/30 animate-pulse"
+                              ? "bg-emerald-950/40 text-emerald-400 border border-emerald-900/40" 
+                              : "bg-yellow-950/40 text-yellow-500 border border-yellow-800/40 animate-pulse"
                           }`}>
                             {log.status}
                           </span>
                           
-                          <div className="flex-1 min-w-0 font-mono">
-                            <div className="flex items-center gap-2 text-zinc-400 text-[10px]">
-                              <span className="font-bold text-neutral-300">{log.module}</span>
+                          <div className="flex-1 min-w-0 font-mono text-[10px] uppercase">
+                            <div className="flex items-center gap-2 text-zinc-500 font-bold">
+                              <span className="text-zinc-300">{log.module}</span>
                               <span>•</span>
                               <span>{log.id}</span>
                               {log.comments.length > 0 && (
-                                <span className="bg-blue-950/60 text-blue-400 border border-blue-900/30 px-1 rounded text-[9px] font-bold">
-                                  {log.comments.length} annotation{log.comments.length > 1 ? "s" : ""}
+                                <span className="bg-sky-950/40 text-sky-400 border border-sky-900/30 px-1.5 rounded-sm text-[8px] font-extrabold tracking-widest">
+                                  {log.comments.length} COMS
                                 </span>
                               )}
                             </div>
-                            <p className="text-neutral-300 truncate mt-1 text-[11px] font-sans">{log.message}</p>
+                            <p className="text-zinc-400 truncate mt-1 font-mono">{log.message}</p>
                           </div>
 
-                          <div className="text-right font-mono text-[10px] text-zinc-600 shrink-0 self-center">
-                            {log.durationMs}ms
+                          <div className="text-right font-mono text-[9px] text-zinc-600 shrink-0 self-center font-bold">
+                            {log.durationMs}MS
                           </div>
                         </div>
                       );
@@ -532,13 +538,13 @@ export const PerformanceSandbox: React.FC = () => {
                 </div>
 
                 {/* Paginated Footer Controls */}
-                <div className="px-4 py-3 bg-[#111111] border-t border-neutral-800 flex justify-between items-center shrink-0">
+                <div className="px-4 py-3 bg-neutral-900/60 border-t border-white/[0.04] flex justify-between items-center shrink-0">
                   <button 
                     disabled={page === 1 || isLoading}
                     onClick={() => setPage(prev => Math.max(prev - 1, 1))}
-                    className="px-3 py-1 border border-neutral-800 text-xs font-semibold rounded text-zinc-400 hover:text-white hover:bg-neutral-900 disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer"
+                    className="px-3.5 py-1.5 border border-white/[0.04] text-[9px] tracking-widest font-extrabold uppercase rounded-sm text-zinc-400 hover:text-white hover:bg-neutral-900 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
                   >
-                    Previous Page
+                    PREV PAGE
                   </button>
                   <div className="flex gap-1.5">
                     {Array.from({ length: Math.min(stats.totalPages, 5) }, (_, idx) => {
@@ -547,10 +553,10 @@ export const PerformanceSandbox: React.FC = () => {
                         <button
                           key={idx}
                           onClick={() => setPage(idx + 1)}
-                          className={`w-7 h-7 font-mono text-[11px] font-bold rounded flex items-center justify-center border transition-all cursor-pointer ${
+                          className={`w-7 h-7 font-mono text-[9px] font-extrabold rounded-sm flex items-center justify-center border transition-all cursor-pointer ${
                             isActive 
-                              ? "bg-blue-600 border-blue-500 text-white" 
-                              : "bg-transparent border-neutral-800 text-zinc-500 hover:text-white hover:bg-neutral-900"
+                              ? "bg-emerald-800 border-emerald-600 text-white" 
+                              : "bg-transparent border-white/[0.04] text-zinc-500 hover:text-white hover:bg-neutral-900"
                           }`}
                         >
                           {idx + 1}
@@ -561,41 +567,41 @@ export const PerformanceSandbox: React.FC = () => {
                   <button 
                     disabled={!stats.hasMore || isLoading}
                     onClick={() => setPage(prev => prev + 1)}
-                    className="px-3 py-1 border border-neutral-800 text-xs font-semibold rounded text-zinc-400 hover:text-white hover:bg-neutral-900 disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer"
+                    className="px-3.5 py-1.5 border border-white/[0.04] text-[9px] tracking-widest font-extrabold uppercase rounded-sm text-zinc-400 hover:text-white hover:bg-neutral-900 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
                   >
-                    Next Page
+                    NEXT PAGE
                   </button>
                 </div>
               </div>
 
               {/* Right Column: Interactive Optimistic comments panel (1/3) */}
-              <div className="border border-neutral-800 bg-[#0c0c0c] rounded-lg overflow-hidden flex flex-col max-h-[450px]">
-                <div className="px-4 py-3 bg-[#111111] border-b border-neutral-800 font-bold text-xs text-neutral-200 shrink-0">
-                  Optimistic UI Comment Sync
+              <div className={`border ${colors.border} bg-black/35 rounded-sm overflow-hidden flex flex-col max-h-[450px]`}>
+                <div className="px-4 py-3 bg-neutral-900/60 border-b border-white/[0.04] font-extrabold text-[10px] uppercase tracking-widest text-white shrink-0">
+                  [LIVE-SYNC] LOG ANNOTATIONS
                 </div>
 
                 {selectedLogId ? (
                   <div className="flex-1 flex flex-col justify-between overflow-hidden">
                     {/* Comments Feed */}
-                    <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                      <div className="p-3 bg-neutral-900 border border-neutral-850 rounded text-[11px] leading-relaxed text-zinc-400 font-mono">
-                        <span className="text-zinc-600 block">SELECTED LOG EVENT</span>
-                        <strong className="text-neutral-300 block mt-0.5">{selectedLogId}</strong>
-                        <p className="mt-1 font-sans text-neutral-200 truncate">{logs.find(l => l.id === selectedLogId)?.message}</p>
+                    <div className="flex-1 overflow-y-auto p-4 space-y-3 scrollbar-thin">
+                      <div className="p-3 bg-neutral-950 border border-white/[0.04] rounded-sm text-[9px] leading-relaxed text-zinc-400 font-mono uppercase font-bold">
+                        <span className="text-zinc-600 block">SELECTED DECK_ID</span>
+                        <strong className="text-white block mt-0.5">{selectedLogId}</strong>
+                        <p className="mt-1 text-zinc-300 truncate">{logs.find(l => l.id === selectedLogId)?.message}</p>
                       </div>
 
-                      <div className="space-y-2 pt-2 border-t border-neutral-900">
-                        <span className="text-[10px] font-mono uppercase text-zinc-500 block">Comments ({selectedLogComments.length})</span>
+                      <div className="space-y-2 pt-2 border-t border-white/[0.04]">
+                        <span className="text-[9px] font-bold uppercase text-zinc-500 block">COMMENTS DIRECTORY ({selectedLogComments.length})</span>
                         {selectedLogComments.length === 0 ? (
-                          <p className="text-[10px] font-mono text-zinc-600 py-4">No annotations on this log. Add one optimistically below!</p>
+                          <p className="text-[9px] font-mono text-zinc-600 py-4 uppercase">No current logs annotated. Inject comment optimistically below.</p>
                         ) : (
                           selectedLogComments.map((c, idx) => (
-                            <div key={c.id || idx} className="p-2.5 bg-neutral-900/60 border border-neutral-800/60 rounded">
-                              <div className="flex justify-between items-center text-[9px] font-mono text-zinc-500">
-                                <span className="font-bold text-blue-400">{c.user}</span>
+                            <div key={c.id || idx} className="p-2.5 bg-black/40 border border-white/[0.04] rounded-sm uppercase text-[9px]">
+                              <div className="flex justify-between items-center text-zinc-500 font-extrabold">
+                                <span className="text-emerald-400">{c.user.toUpperCase()}</span>
                                 <span>{new Date(c.createdAt).toLocaleTimeString()}</span>
                               </div>
-                              <p className="text-xs text-neutral-300 mt-1 font-sans">{c.text}</p>
+                              <p className="text-zinc-300 mt-1">{c.text}</p>
                             </div>
                           ))
                         )}
@@ -603,34 +609,34 @@ export const PerformanceSandbox: React.FC = () => {
                     </div>
 
                     {/* Submit Comment form */}
-                    <form onSubmit={handlePostComment} className="p-3 border-t border-neutral-850 bg-black/60 space-y-2 shrink-0">
+                    <form onSubmit={handlePostComment} className="p-3 border-t border-white/[0.04] bg-neutral-900/40 space-y-2 shrink-0">
                       <div className="relative">
                         <input 
                           type="text"
                           value={commentText}
                           onChange={(e) => setCommentText(e.target.value)}
-                          placeholder="Type log comment/annotation..."
+                          placeholder="ANNOTATE LOG EVENT..."
                           disabled={addCommentMutation.isPending}
-                          className="w-full bg-[#0a0a0a] border border-neutral-800 px-3.5 py-2 pr-12 rounded text-xs text-neutral-200 placeholder-zinc-700 outline-none focus:border-neutral-600"
+                          className="w-full bg-black/40 border border-white/[0.04] px-3.5 py-2 pr-12 rounded-sm text-xs text-white placeholder-zinc-700 outline-none focus:border-neutral-500 uppercase font-bold"
                         />
                         <button 
                           type="submit"
                           disabled={addCommentMutation.isPending || !commentText.trim()}
-                          className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1.5 text-blue-500 hover:text-blue-400 disabled:opacity-20 cursor-pointer"
+                          className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1.5 text-emerald-400 hover:text-emerald-300 disabled:opacity-20 cursor-pointer"
                         >
                           <Send className="w-3.5 h-3.5" />
                         </button>
                       </div>
-                      <div className="flex justify-between items-center text-[9px] text-zinc-600 font-mono">
-                        <span>Latency: +600ms network delay</span>
-                        <span>{addCommentMutation.isPending ? "Syncing..." : "Ready"}</span>
+                      <div className="flex justify-between items-center text-[8px] text-zinc-600 font-extrabold uppercase tracking-widest">
+                        <span>LATENCY: +600MS NETWORK DELAY</span>
+                        <span>{addCommentMutation.isPending ? "COMMITING..." : "SECURE_STANDBY"}</span>
                       </div>
                     </form>
                   </div>
                 ) : (
-                  <div className="flex-1 flex flex-col items-center justify-center text-center p-6 text-zinc-500">
+                  <div className="flex-1 flex flex-col items-center justify-center text-center p-6 text-zinc-500 uppercase">
                     <Terminal className="w-6 h-6 mb-2 text-zinc-700" />
-                    <p className="text-xs font-mono">Select a system log event from the grid to review and add optimistic annotations.</p>
+                    <p className="text-[10px] font-mono leading-relaxed">Select a live registry record to annotate operations data-structures.</p>
                   </div>
                 )}
               </div>
@@ -642,24 +648,24 @@ export const PerformanceSandbox: React.FC = () => {
 
         {/* TAB Content 2: Virtualized Infinite Scroller */}
         {activeTab === "virtual" && (
-          <div className="p-5 space-y-4">
+          <div className="p-5 space-y-4 animate-in fade-in duration-200">
             
             {/* Header info bar */}
-            <div className="bg-[#121212] border border-neutral-800 p-4 rounded-lg flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="bg-black/40 border border-white/[0.04] p-4 rounded-sm flex flex-col md:flex-row items-center justify-between gap-4 uppercase">
               <div className="flex items-start gap-3">
-                <div className="p-2.5 bg-purple-950/40 border border-purple-500/20 text-purple-400 rounded-md shrink-0">
+                <div className="p-2.5 bg-emerald-500/10 border border-emerald-600/20 text-emerald-400 rounded-sm shrink-0">
                   <Flame className="w-5 h-5 animate-pulse" />
                 </div>
                 <div>
-                  <h4 className="text-xs font-bold text-neutral-200">5,000 Record Virtualizer Scroller</h4>
-                  <p className="text-[11px] text-zinc-500 font-mono mt-0.5">
-                    Demonstrating zero-frame-drops UI using <code className="text-blue-400 font-bold">@tanstack/react-virtual</code> row recycling on infinite datasets.
+                  <h4 className="text-[10px] font-extrabold text-white tracking-widest">5,000 ACTIVE RECORD VIRTUAL SCANNER</h4>
+                  <p className="text-[9px] text-zinc-500 font-mono mt-0.5 tracking-wide">
+                    Evaluating row recycling systems on large datasets with zero performance drop.
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-3 shrink-0 text-xs font-mono text-zinc-400 bg-neutral-900 border border-neutral-800 px-3 py-1.5 rounded">
-                <span>Loaded in Virtual Context:</span>
-                <strong className="text-white font-bold">{allInfiniteLogs.length} items</strong>
+              <div className="flex items-center gap-3 shrink-0 text-[9px] font-bold text-zinc-400 bg-neutral-900 border border-white/[0.04] px-3.5 py-1.5 rounded-sm">
+                <span>RECON_SCOPE_LOADED:</span>
+                <strong className="text-emerald-400 font-extrabold">{allInfiniteLogs.length} EVENTS</strong>
               </div>
             </div>
 
@@ -667,13 +673,13 @@ export const PerformanceSandbox: React.FC = () => {
             <div 
               ref={infiniteParentRef}
               onScroll={handleInfiniteScroll}
-              className="h-[480px] w-full bg-[#070707] border border-neutral-800 rounded-lg overflow-y-auto relative scrollbar-thin divide-y divide-neutral-900"
+              className="h-[480px] w-full bg-neutral-950 border border-white/[0.04] rounded-sm overflow-y-auto relative scrollbar-thin divide-y divide-white/[0.02]"
             >
               
               {isInfiniteLoading ? (
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
-                  <div className="w-6 h-6 border-2 border-t-purple-500 border-neutral-850 rounded-full animate-spin" />
-                  <span className="text-xs font-mono text-zinc-500">Priming infinite scroll indexes...</span>
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 uppercase">
+                  <div className="w-6 h-6 border-2 border-t-emerald-500 border-neutral-900 rounded-full animate-spin" />
+                  <span className="text-[9px] font-bold text-zinc-500 tracking-widest">SCANNING DATA BLOCK POOLS...</span>
                 </div>
               ) : (
                 <div 
@@ -698,26 +704,26 @@ export const PerformanceSandbox: React.FC = () => {
                           height: `${virtualRow.size}px`,
                           transform: `translateY(${virtualRow.start}px)`,
                         }}
-                        className={`px-4 flex items-center justify-between text-[11px] font-mono border-b border-neutral-900/50 hover:bg-[#111111]/40 ${
-                          log.status === "WARNING" ? "bg-red-950/5 border-l border-red-500" : ""
+                        className={`px-4 flex items-center justify-between text-[10px] font-mono border-b border-white/[0.02] hover:bg-white/[0.01] uppercase ${
+                          log.status === "WARNING" ? "bg-red-950/10 border-l border-red-500" : ""
                         }`}
                       >
                         <div className="flex items-center gap-3 min-w-0 flex-1 pr-4">
-                          <span className="text-zinc-600 shrink-0 text-[10px]">{log.id}</span>
-                          <span className={`px-1.5 py-0.2 rounded font-mono text-[8px] uppercase tracking-wider shrink-0 font-bold ${
+                          <span className="text-zinc-600 shrink-0 text-[9px] font-bold">{log.id}</span>
+                          <span className={`px-1.5 py-0.5 rounded-sm font-mono text-[8px] uppercase tracking-wider shrink-0 font-extrabold ${
                             log.status === "SUCCESS" 
-                              ? "bg-emerald-950/20 text-emerald-400/80" 
-                              : "bg-red-950/20 text-red-400"
+                              ? "bg-emerald-950/20 text-emerald-400" 
+                              : "bg-red-950/20 text-red-400 border border-red-900/30"
                           }`}>
                             {log.module}
                           </span>
-                          <span className="text-neutral-300 truncate">{log.message}</span>
+                          <span className="text-zinc-300 truncate font-mono">{log.message}</span>
                         </div>
                         
-                        <div className="flex items-center gap-4 shrink-0 text-zinc-500">
-                          <span>{log.operator}</span>
-                          <span className="text-zinc-600">|</span>
-                          <span className="w-12 text-right">{log.durationMs}ms</span>
+                        <div className="flex items-center gap-4 shrink-0 text-zinc-500 font-bold text-[9px]">
+                          <span>{log.operator.toUpperCase()}</span>
+                          <span className="text-zinc-800">|</span>
+                          <span className="w-12 text-right">{log.durationMs}MS</span>
                         </div>
                       </div>
                     );
@@ -729,9 +735,9 @@ export const PerformanceSandbox: React.FC = () => {
 
             {/* Loading Indicator at Bottom */}
             {isFetchingNextPage && (
-              <div className="p-3 text-center text-xs font-mono text-purple-400 flex items-center justify-center gap-2 bg-neutral-950/80 border border-neutral-900 rounded">
-                <RefreshCw className="w-4.5 h-4.5 animate-spin text-purple-500" />
-                <span>Streaming next batch of 100 entries...</span>
+              <div className="p-3 text-center text-[9px] font-bold text-emerald-400 flex items-center justify-center gap-2 bg-neutral-900 border border-white/[0.04] rounded-sm uppercase tracking-widest">
+                <RefreshCw className="w-4 h-4 animate-spin text-emerald-500" />
+                <span>STREAMING DEEP REGISTRY SEGMENT DECK (100 RECORDS)...</span>
               </div>
             )}
 

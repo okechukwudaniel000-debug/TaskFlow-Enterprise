@@ -13,6 +13,7 @@ import { useTaskFlow } from "../contexts/TaskFlowContext";
 import { Task, TaskPriority, TaskStatus } from "../types";
 import { useNotificationStore } from "../features/notifications/notificationStore";
 import { apiFetch } from "../features/auth/authStore";
+import { useMilitaryTheme } from "../contexts/MilitaryThemeContext";
 
 interface TaskDrawerProps {
   taskId: string | null;
@@ -295,20 +296,22 @@ export const TaskDrawer: React.FC<TaskDrawerProps> = ({ taskId, onClose }) => {
     }, 600);
   };
 
+  const { colors } = useMilitaryTheme();
+
   return (
-    <div className="fixed inset-0 bg-[#090909]/70 backdrop-blur-sm z-40 flex justify-end">
+    <div className="fixed inset-0 bg-black/85 backdrop-blur-md z-40 flex justify-end">
       {/* Sidebar background clickable to dismiss */}
       <div className="flex-1 cursor-pointer" onClick={onClose} />
 
       {/* Main Drawer container panel */}
-      <div className="w-full max-w-4xl bg-[#151515] border-l border-[#262626] h-full flex flex-col shadow-2xl relative animate-in slide-in-from-right duration-200">
+      <div className={`w-full max-w-4xl ${colors.bgPanel} border-l ${colors.border} h-full flex flex-col shadow-2xl relative animate-in slide-in-from-right duration-200`}>
         
         {/* Header Action Row */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#262626] bg-[#0b0b0b] shrink-0">
-          <div className="flex items-center gap-2 text-xs font-mono text-zinc-400">
-            <span className="px-2 py-0.5 bg-[#1a1a1a] rounded-md border border-[#262626] text-white font-bold">{task.id}</span>
+        <div className={`flex items-center justify-between px-6 py-4 border-b ${colors.borderMuted} bg-black/20 shrink-0`}>
+          <div className="flex items-center gap-2 text-[10px] font-mono font-bold tracking-wider text-zinc-400">
+            <span className={`px-2 py-0.5 bg-black/40 rounded-sm border ${colors.border} text-emerald-400 font-bold`}>{task.id}</span>
             <span>/</span>
-            <span className="truncate max-w-[200px] text-zinc-300 font-sans font-semibold">{currentProject?.name}</span>
+            <span className="truncate max-w-[200px] text-zinc-300 font-sans font-bold uppercase">{currentProject?.name}</span>
           </div>
 
           <div className="flex items-center gap-2">
@@ -351,10 +354,10 @@ export const TaskDrawer: React.FC<TaskDrawerProps> = ({ taskId, onClose }) => {
         </div>
 
         {/* Drawer Body Scrollable Grid */}
-        <div className="flex-1 overflow-y-auto grid grid-cols-1 lg:grid-cols-12">
+        <div className="flex-1 overflow-y-auto grid grid-cols-1 lg:grid-cols-12 scrollbar-thin">
           
           {/* LEFT SIDE: Core content editor (8 columns) */}
-          <div className="lg:col-span-8 p-6 space-y-6 border-r border-[#262626]">
+          <div className={`lg:col-span-8 p-6 space-y-6 border-r ${colors.border}`}>
             
             {/* Task Title editable */}
             <div>

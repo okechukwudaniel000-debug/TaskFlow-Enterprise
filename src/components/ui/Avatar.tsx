@@ -4,6 +4,8 @@
  */
 
 import React, { useState } from "react";
+import { useMilitaryTheme } from "../../contexts/MilitaryThemeContext";
+import { RADIUS } from "../../utils/themeTokens";
 
 export interface AvatarProps extends React.HTMLAttributes<HTMLDivElement> {
   src?: string;
@@ -20,6 +22,7 @@ export const Avatar: React.FC<AvatarProps> = ({
   className = "",
   ...props
 }) => {
+  const { colors } = useMilitaryTheme();
   const [hasError, setHasError] = useState(false);
 
   // Generate initials (up to 2 letters)
@@ -30,42 +33,41 @@ export const Avatar: React.FC<AvatarProps> = ({
         .slice(0, 2)
         .join("")
         .toUpperCase()
-    : "?";
+    : "HQ";
 
   // Sizes dictionary
   const sizes = {
     xs: "w-5 h-5 text-[8px]",
-    sm: "w-7 h-7 text-[10px]",
-    md: "w-9 h-9 text-xs",
-    lg: "w-12 h-12 text-sm",
-    xl: "w-16 h-16 text-lg font-bold",
+    sm: "w-7 h-7 text-[9px]",
+    md: "w-9 h-9 text-[10px]",
+    lg: "w-11 h-11 text-xs",
+    xl: "w-14 h-14 text-sm font-bold",
   };
 
-  // Generate deterministic subtle colors based on initials for aesthetic variation
+  // Generate deterministic subtle military-grade background variants based on initials
   const getAvatarBg = (str: string) => {
     const sum = str.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
     const bgColors = [
-      "bg-blue-950/40 text-blue-400 border border-blue-900/40",
-      "bg-emerald-950/40 text-emerald-400 border border-emerald-900/40",
-      "bg-amber-950/40 text-amber-400 border border-amber-900/40",
-      "bg-purple-950/40 text-purple-400 border border-purple-900/40",
-      "bg-sky-950/40 text-sky-400 border border-sky-900/40",
-      "bg-rose-950/40 text-rose-400 border border-rose-900/40",
+      "bg-[#1d3224] text-[#8cb891] border border-[#2b3f31]", // Sage
+      "bg-[#2d1212] text-[#ef4444] border border-[#7f1d1d]", // Crimson Stealth
+      "bg-[#44382c] text-[#e2b07a] border border-[#5c4e3f]", // coyote
+      "bg-[#152737] text-[#9fcbe0] border border-[#25364b]", // Arctic Blue
+      "bg-[#1d2d22] text-[#a3c2a6] border border-[#2b3f31]", // Tactical Olive
     ];
     return bgColors[sum % bgColors.length];
   };
 
   return (
     <div
-      className={`relative inline-flex items-center justify-center rounded-full overflow-hidden shrink-0 select-none font-mono font-semibold ${
+      className={`relative inline-flex items-center justify-center overflow-hidden shrink-0 select-none font-mono font-bold tracking-wider ${
         sizes[size]
-      } ${!src || hasError ? getAvatarBg(name || initials) : "bg-[#181818] border border-neutral-800"} ${className}`}
+      } ${RADIUS.full} ${!src || hasError ? getAvatarBg(name || initials) : `bg-black/50 border ${colors.border}`} ${className}`}
       {...props}
     >
       {src && !hasError ? (
         <img
           src={src}
-          alt={alt || name || "User Avatar"}
+          alt={alt || name || "Operator Avatar"}
           onError={() => setHasError(true)}
           className="w-full h-full object-cover"
           referrerPolicy="no-referrer"

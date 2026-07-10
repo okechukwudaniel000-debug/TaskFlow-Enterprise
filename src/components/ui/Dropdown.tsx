@@ -6,6 +6,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { ChevronDown } from "lucide-react";
+import { useMilitaryTheme } from "../../contexts/MilitaryThemeContext";
+import { RADIUS, SHADOWS } from "../../utils/themeTokens";
 
 export interface DropdownItem {
   value: string;
@@ -33,6 +35,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
   align = "right",
   className = "",
 }) => {
+  const { colors } = useMilitaryTheme();
   const [isOpen, setIsOpen] = useState(false);
   const [focusedIndex, setFocusedIndex] = useState(-1);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -92,7 +95,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
     }
   }, [isOpen, selectedValue, items]);
 
-  const activeItemLabel = items.find((i) => i.value === selectedValue)?.label || label || "Select option";
+  const activeItemLabel = items.find((i) => i.value === selectedValue)?.label || label || "Select Command";
 
   return (
     <div ref={containerRef} className={`relative inline-block ${className}`}>
@@ -107,10 +110,10 @@ export const Dropdown: React.FC<DropdownProps> = ({
           aria-haspopup="listbox"
           aria-expanded={isOpen}
           onClick={() => setIsOpen(!isOpen)}
-          className="inline-flex items-center justify-between gap-2.5 bg-[#121212] hover:bg-[#1a1a1a] border border-neutral-800 text-xs text-neutral-300 font-semibold px-3 py-1.5 rounded-md cursor-pointer select-none transition-all outline-none focus-visible:ring-2 focus-visible:ring-blue-500 min-w-[140px]"
+          className={`inline-flex items-center justify-between gap-2.5 bg-black/40 hover:bg-white/[0.03] border ${colors.border} ${colors.textPrimary} font-mono font-bold tracking-wider uppercase text-[10px] px-3.5 py-2 ${RADIUS.sm} cursor-pointer select-none transition-all outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 min-w-[150px]`}
         >
           <span className="truncate">{activeItemLabel}</span>
-          <ChevronDown className={`w-3.5 h-3.5 text-zinc-500 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
+          <ChevronDown className={`w-3.5 h-3.5 ${colors.textMuted} transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
         </button>
       )}
 
@@ -122,7 +125,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
             exit={{ opacity: 0, scale: 0.95, y: -4 }}
             transition={{ duration: 0.12 }}
             role="listbox"
-            className={`absolute z-40 mt-1.5 w-56 bg-[#111111] border border-neutral-800 rounded-lg overflow-hidden shadow-xl p-1 ${
+            className={`absolute z-40 mt-1.5 w-56 ${colors.bgPanel} border ${colors.border} ${RADIUS.sm} ${SHADOWS.tactical} overflow-hidden p-1 ${
               align === "right" ? "right-0" : "left-0"
             }`}
           >
@@ -143,16 +146,16 @@ export const Dropdown: React.FC<DropdownProps> = ({
                       setIsOpen(false);
                     }
                   }}
-                  className={`w-full text-left flex items-center gap-2.5 px-3 py-2 rounded-md text-xs font-medium cursor-pointer transition-colors outline-none disabled:opacity-40 disabled:pointer-events-none ${
+                  className={`w-full text-left flex items-center gap-2.5 px-3 py-2 rounded-sm text-[10px] font-mono font-semibold uppercase tracking-wider cursor-pointer transition-colors outline-none disabled:opacity-30 disabled:pointer-events-none ${
                     isFocused || isSelected
-                      ? "bg-[#181818] text-white"
-                      : "text-zinc-400 hover:text-neutral-200 hover:bg-[#151515]"
+                      ? "bg-white/[0.05] text-white border-l-2 border-emerald-500"
+                      : `${colors.textMuted} hover:text-white hover:bg-white/[0.03]`
                   }`}
                 >
                   {item.icon && <span className="shrink-0 text-zinc-500">{item.icon}</span>}
                   <span className="flex-1 truncate">{item.label}</span>
                   {isSelected && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0 animate-pulse" />
                   )}
                 </button>
               );

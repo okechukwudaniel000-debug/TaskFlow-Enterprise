@@ -6,6 +6,8 @@
 import React, { createContext, useContext, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { X, CheckCircle2, AlertTriangle, AlertCircle, Info } from "lucide-react";
+import { RADIUS, SHADOWS } from "../../utils/themeTokens";
+import { useMilitaryTheme } from "../../contexts/MilitaryThemeContext";
 
 export type ToastType = "success" | "error" | "warning" | "info";
 
@@ -36,6 +38,7 @@ export const useToast = () => {
 
 export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
+  const { colors } = useMilitaryTheme();
 
   const removeToast = useCallback((id: string) => {
     setToasts((prev) => prev.filter((t) => t.id !== id));
@@ -58,18 +61,19 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const warn = useCallback((msg: string, dur?: number) => toast(msg, "warning", dur), [toast]);
   const info = useCallback((msg: string, dur?: number) => toast(msg, "info", dur), [toast]);
 
+  // Command center style icon selection
   const icons = {
-    success: <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />,
-    error: <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />,
-    warning: <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />,
-    info: <Info className="w-4 h-4 text-blue-400 shrink-0" />,
+    success: <CheckCircle2 className="w-4 h-4 text-[#76df91] shrink-0" />,
+    error: <AlertCircle className="w-4 h-4 text-[#ff9999] shrink-0" />,
+    warning: <AlertTriangle className="w-4 h-4 text-[#ffcc99] shrink-0" />,
+    info: <Info className="w-4 h-4 text-sky-400 shrink-0" />,
   };
 
   const borders = {
-    success: "border-emerald-500/20 bg-emerald-950/20 text-emerald-400",
-    error: "border-red-500/20 bg-red-950/20 text-red-400",
-    warning: "border-amber-500/20 bg-amber-950/20 text-amber-400",
-    info: "border-blue-500/20 bg-blue-950/20 text-blue-400",
+    success: `${colors.completed} text-[#eaf2eb] bg-black/90`,
+    error: `${colors.critical} text-[#ffcccc] bg-black/90`,
+    warning: `${colors.warning} text-[#ffeedd] bg-black/90`,
+    info: `border-sky-800 text-sky-100 bg-black/95`,
   };
 
   return (
@@ -82,19 +86,20 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           {toasts.map((t) => (
             <motion.div
               key={t.id}
-              initial={{ opacity: 0, y: 15, scale: 0.93 }}
+              initial={{ opacity: 0, y: 15, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 5, scale: 0.93 }}
+              exit={{ opacity: 0, y: 5, scale: 0.95 }}
               layout
-              className={`pointer-events-auto flex items-start gap-3 p-3.5 border rounded-lg shadow-xl backdrop-blur-md ${borders[t.type]}`}
+              className={`pointer-events-auto flex items-start gap-3 p-4 border rounded-sm ${SHADOWS.tactical} backdrop-blur-md ${borders[t.type]}`}
             >
               <div className="mt-0.5 shrink-0">{icons[t.type]}</div>
-              <div className="flex-1 text-[11px] font-medium leading-relaxed font-sans text-neutral-200">
+              <div className="flex-1 text-[10px] font-mono font-semibold uppercase tracking-wider leading-relaxed">
+                <span className="text-zinc-500 mr-1.5 font-bold">[{t.type.toUpperCase()}]</span>
                 {t.message}
               </div>
               <button
                 onClick={() => removeToast(t.id)}
-                className="p-1 hover:bg-white/10 rounded text-zinc-500 hover:text-white transition-colors cursor-pointer shrink-0"
+                className="p-1 hover:bg-white/10 rounded-sm text-neutral-500 hover:text-white transition-colors cursor-pointer shrink-0"
                 aria-label="Dismiss message"
               >
                 <X className="w-3 h-3" />

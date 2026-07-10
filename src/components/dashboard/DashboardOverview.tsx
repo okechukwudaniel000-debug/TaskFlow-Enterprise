@@ -6,10 +6,12 @@
 import React, { useMemo } from "react";
 import { 
   TrendingUp, Clock, AlertTriangle, CheckCircle2, Calendar, 
-  Layers, Pin, ArrowUpRight, MessageSquare, Bell, Sparkles
+  Layers, Pin, ArrowUpRight, MessageSquare, Bell, Sparkles, Shield, Radar, AlertCircle
 } from "lucide-react";
 import { useTaskFlow } from "../../contexts/TaskFlowContext";
 import { TaskStatus, TaskPriority, Task } from "../../types";
+import { useMilitaryTheme } from "../../contexts/MilitaryThemeContext";
+import { RADIUS, SHADOWS, TYPOGRAPHY } from "../../utils/themeTokens";
 
 interface DashboardOverviewProps {
   onNavigateToView: (view: string) => void;
@@ -24,6 +26,8 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
     currentUser, tasks, projects, notifications, 
     markNotificationAsRead, markAllNotificationsAsRead 
   } = useTaskFlow();
+
+  const { colors } = useMilitaryTheme();
 
   // 1. Filter metrics specific to current logged-in user
   const userTasks = useMemo(() => {
@@ -76,7 +80,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
         feedItems.push({
           id: c.id,
           type: "comment",
-          title: "New Comment",
+          title: "COMMS INTERCEPT",
           details: c.content,
           time: c.createdAt,
           taskTitle: t.title,
@@ -89,7 +93,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
         feedItems.push({
           id: act.id,
           type: "activity",
-          title: "Audit Update",
+          title: "AUDIT LOG ENTRY",
           details: act.details,
           time: act.createdAt,
           taskTitle: t.title,
@@ -104,37 +108,41 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
   }, [tasks]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 relative z-10">
       
-      {/* Welcome Banner Card */}
-      <div className="relative overflow-hidden bg-[#151515] border border-[#262626] rounded-xl p-6 md:p-8 flex flex-col md:flex-row md:items-center md:justify-between gap-6 shadow-sm">
-        <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-blue-600/5 rounded-full blur-[100px] pointer-events-none" />
+      {/* Welcome Banner Card (HUD Display) */}
+      <div className={`relative overflow-hidden ${colors.bgCard} border ${colors.border} ${RADIUS.md} p-6 md:p-8 flex flex-col md:flex-row md:items-center md:justify-between gap-6 ${SHADOWS.tactical} backdrop-blur-md`}>
+        <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-emerald-500/5 rounded-full blur-[80px] pointer-events-none" />
         
-        <div className="space-y-2 relative">
-          <div className="flex items-center gap-2 text-xs font-semibold text-blue-400 uppercase tracking-wider font-mono">
-            <Sparkles className="w-4 h-4" />
-            <span>TaskFlow Enterprise Suite Live</span>
+        {/* Subtle decorative crosshairs */}
+        <div className="absolute top-4 right-4 w-6 h-6 border-t border-r border-white/10" />
+        <div className="absolute bottom-4 left-4 w-6 h-6 border-b border-l border-white/10" />
+
+        <div className="space-y-3 relative">
+          <div className="flex items-center gap-2 text-[9px] font-mono font-bold text-emerald-400 uppercase tracking-widest bg-emerald-950/40 border border-emerald-900/50 px-2.5 py-1 w-max rounded-sm">
+            <Radar className="w-3.5 h-3.5 text-emerald-400 animate-spin" />
+            <span>COMMAND SECURE SUITE // ENCRYPTED COMMS ACTIVE</span>
           </div>
-          <h2 className="text-xl md:text-2xl font-bold tracking-tight text-white">
-            Welcome back, {currentUser?.name || "Daniel"}
+          <h2 className="text-lg md:text-xl font-mono font-bold tracking-wider text-white uppercase">
+            OPERATOR SECURE SESSION: {currentUser?.name || "Officer"}
           </h2>
-          <p className="text-xs text-zinc-400 max-w-xl">
-            You currently have <span className="text-blue-400 font-semibold">{assignedCount} active sprint tasks</span> assigned to your profile. Let's plan, track, and ship today!
+          <p className="text-xs text-neutral-400 max-w-xl font-sans leading-relaxed">
+            Your telemetry profile is synced. You have <span className="text-emerald-400 font-bold font-mono">[{assignedCount}] allocated sprint missions</span>. Stand by for status coordinates and tactical updates.
           </p>
         </div>
 
-        <div className="flex gap-3 shrink-0 relative">
+        <div className="flex gap-2.5 shrink-0 relative font-mono text-[10px] font-bold uppercase tracking-wider">
           <button
             onClick={() => onNavigateToView("board")}
-            className="px-3 py-1.5 rounded-md bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs transition-all duration-200 cursor-pointer"
+            className="px-4 py-2 bg-emerald-800 hover:bg-emerald-700 border border-emerald-600 text-emerald-100 rounded-sm cursor-pointer shadow transition-all duration-150 active:scale-95"
           >
-            Go to Sprint Board
+            Tactical Kanban
           </button>
           <button
             onClick={() => onNavigateToView("projects")}
-            className="px-3 py-1.5 rounded-md bg-[#1a1a1a] hover:bg-[#222] text-zinc-300 border border-[#262626] font-medium text-xs transition-all duration-200 cursor-pointer"
+            className={`px-4 py-2 bg-black/45 hover:bg-white/[0.02] text-zinc-300 border ${colors.border} rounded-sm cursor-pointer transition-all duration-150 active:scale-95`}
           >
-            Explore Projects
+            Mission Folders
           </button>
         </div>
       </div>
@@ -142,50 +150,50 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
       {/* Grid: Statistical KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Total Assigned */}
-        <div className="bg-[#151515] border border-[#262626] rounded-xl p-5 shadow-sm flex items-center justify-between hover:bg-[#1a1a1a] hover:border-[#333] transition-all duration-150">
-          <div className="space-y-1">
-            <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider font-mono">Assigned Sprint Issues</p>
-            <p className="text-2xl font-bold text-white">{assignedCount}</p>
-            <p className="text-[10px] text-zinc-400">Total backlog allocated</p>
+        <div className={`${colors.bgCard} border ${colors.border} ${RADIUS.md} p-5 ${SHADOWS.tactical} backdrop-blur-md flex items-center justify-between hover:bg-white/[0.01] hover:border-neutral-500 transition-all duration-150 group`}>
+          <div className="space-y-1.5">
+            <p className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest font-mono">Assigned Operations</p>
+            <p className="text-2xl font-mono font-extrabold text-white">[{assignedCount}]</p>
+            <p className="text-[9px] font-mono text-zinc-600 uppercase tracking-wider">Active Sector Alloc</p>
           </div>
-          <div className="w-10 h-10 bg-blue-500/10 rounded-md flex items-center justify-center text-blue-400 border border-blue-500/20">
-            <Layers className="w-5 h-5" />
+          <div className={`w-10 h-10 ${colors.accentBg} ${RADIUS.sm} border ${colors.border} flex items-center justify-center ${colors.accent} transition-transform group-hover:scale-105`}>
+            <Layers className="w-4 h-4" />
           </div>
         </div>
 
         {/* In Progress */}
-        <div className="bg-[#151515] border border-[#262626] rounded-xl p-5 shadow-sm flex items-center justify-between hover:bg-[#1a1a1a] hover:border-[#333] transition-all duration-150">
-          <div className="space-y-1">
-            <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider font-mono">Tasks In Progress</p>
-            <p className="text-2xl font-bold text-white">{inProgressCount}</p>
-            <p className="text-[10px] text-yellow-500">Active coding execution</p>
+        <div className={`${colors.bgCard} border ${colors.border} ${RADIUS.md} p-5 ${SHADOWS.tactical} backdrop-blur-md flex items-center justify-between hover:bg-white/[0.01] hover:border-neutral-500 transition-all duration-150 group`}>
+          <div className="space-y-1.5">
+            <p className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest font-mono">Active Deployment</p>
+            <p className="text-2xl font-mono font-extrabold text-white">[{inProgressCount}]</p>
+            <p className="text-[9px] font-mono text-yellow-500 uppercase tracking-wider">In-progress execution</p>
           </div>
-          <div className="w-10 h-10 bg-yellow-500/10 rounded-md flex items-center justify-center text-yellow-500 border border-yellow-500/20">
-            <Clock className="w-5 h-5" />
+          <div className="w-10 h-10 bg-yellow-950/40 rounded-sm border border-yellow-800/40 flex items-center justify-center text-yellow-500 transition-transform group-hover:scale-105">
+            <Clock className="w-4 h-4" />
           </div>
         </div>
 
         {/* Overdue Issues */}
-        <div className="bg-[#151515] border border-[#262626] rounded-xl p-5 shadow-sm flex items-center justify-between hover:bg-[#1a1a1a] hover:border-[#333] transition-all duration-150">
-          <div className="space-y-1">
-            <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider font-mono">Overdue Bottlenecks</p>
-            <p className="text-2xl font-bold text-red-500">{overdueTasks.length}</p>
-            <p className="text-[10px] text-red-400">Requires immediate priority</p>
+        <div className={`${colors.bgCard} border ${colors.border} ${RADIUS.md} p-5 ${SHADOWS.tactical} backdrop-blur-md flex items-center justify-between hover:bg-white/[0.01] hover:border-neutral-500 transition-all duration-150 group`}>
+          <div className="space-y-1.5">
+            <p className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest font-mono">Strategic Bottlenecks</p>
+            <p className="text-2xl font-mono font-extrabold text-red-500">[{overdueTasks.length}]</p>
+            <p className="text-[9px] font-mono text-red-400 uppercase tracking-wider">Breached deadline limits</p>
           </div>
-          <div className="w-10 h-10 bg-red-500/10 rounded-md flex items-center justify-center text-red-400 border border-red-500/20">
-            <AlertTriangle className="w-5 h-5" />
+          <div className="w-10 h-10 bg-red-950/40 rounded-sm border border-red-800/40 flex items-center justify-center text-red-400 transition-transform group-hover:scale-105">
+            <AlertTriangle className="w-4 h-4" />
           </div>
         </div>
 
         {/* Done Completed */}
-        <div className="bg-[#151515] border border-[#262626] rounded-xl p-5 shadow-sm flex items-center justify-between hover:bg-[#1a1a1a] hover:border-[#333] transition-all duration-150">
-          <div className="space-y-1">
-            <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider font-mono">Completed Tickets</p>
-            <p className="text-2xl font-bold text-emerald-400">{completedCount}</p>
-            <p className="text-[10px] text-emerald-500">Closed & shipped in sprint</p>
+        <div className={`${colors.bgCard} border ${colors.border} ${RADIUS.md} p-5 ${SHADOWS.tactical} backdrop-blur-md flex items-center justify-between hover:bg-white/[0.01] hover:border-neutral-500 transition-all duration-150 group`}>
+          <div className="space-y-1.5">
+            <p className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest font-mono">Missions Concluded</p>
+            <p className="text-2xl font-mono font-extrabold text-[#76df91]">[{completedCount}]</p>
+            <p className="text-[9px] font-mono text-emerald-500 uppercase tracking-wider">Concluded & archived</p>
           </div>
-          <div className="w-10 h-10 bg-emerald-500/10 rounded-md flex items-center justify-center text-emerald-400 border border-emerald-500/20">
-            <CheckCircle2 className="w-5 h-5" />
+          <div className="w-10 h-10 bg-emerald-950/40 rounded-sm border border-emerald-850 flex items-center justify-center text-[#76df91] transition-transform group-hover:scale-105">
+            <CheckCircle2 className="w-4 h-4" />
           </div>
         </div>
       </div>
@@ -198,23 +206,23 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
           
           {/* Overdue Alert list if any */}
           {overdueTasks.length > 0 && (
-            <div className="bg-red-950/10 border border-red-900/30 rounded-xl p-4.5 space-y-3">
-              <div className="flex items-center gap-2 text-red-400">
-                <AlertTriangle className="w-4 h-4" />
-                <h3 className="text-xs font-bold uppercase tracking-wider font-mono">Critical Bottleneck Alert ({overdueTasks.length})</h3>
+            <div className="bg-red-950/10 border border-red-900/30 rounded-sm p-4.5 space-y-3 shadow-md">
+              <div className="flex items-center gap-2.5 text-red-400">
+                <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />
+                <h3 className="text-xs font-bold uppercase tracking-widest font-mono">CRITICAL THREAT BOTTLENECK ALERT ({overdueTasks.length})</h3>
               </div>
               <div className="space-y-2">
                 {overdueTasks.map(t => (
                   <div 
                     key={t.id} 
                     onClick={() => onSelectTask(t.id)}
-                    className="bg-[#0b0b0b] border border-[#262626] hover:border-red-900/40 rounded-md p-3 flex justify-between items-center gap-4 cursor-pointer hover:bg-[#1a1a1a] transition-all"
+                    className={`bg-black/40 border ${colors.border} hover:border-red-500/50 rounded-sm p-3.5 flex justify-between items-center gap-4 cursor-pointer transition-all`}
                   >
                     <div className="min-w-0">
-                      <p className="text-xs font-semibold text-white truncate">{t.title}</p>
-                      <p className="text-[10px] text-zinc-500 font-mono mt-0.5">ID: {t.id} • Overdue since: {t.dueDate}</p>
+                      <p className="text-xs font-mono font-bold text-white uppercase tracking-wide truncate">{t.title}</p>
+                      <p className="text-[9px] text-zinc-500 font-mono mt-1">ID_TKT: {t.id} • DEADLINE BREACH: {t.dueDate}</p>
                     </div>
-                    <span className="text-[9px] uppercase tracking-wider font-mono bg-red-900/20 text-red-300 border border-red-900/30 px-2 py-0.5 rounded shrink-0">
+                    <span className="text-[8px] uppercase tracking-wider font-mono bg-red-950/60 text-red-300 border border-red-800/60 px-2 py-0.5 rounded-sm shrink-0">
                       {t.priority}
                     </span>
                   </div>
@@ -224,46 +232,52 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
           )}
 
           {/* Up Next / Upcoming Deadlines */}
-          <div className="bg-[#151515] border border-[#262626] rounded-xl p-5 shadow-sm space-y-4">
-            <div className="flex justify-between items-center">
-              <h3 className="text-xs font-bold text-white uppercase tracking-wider font-mono">
-                My Active Tasks & Up Next
+          <div className={`${colors.bgCard} border ${colors.border} ${RADIUS.md} p-5 ${SHADOWS.tactical} backdrop-blur-md space-y-4`}>
+            <div className="flex justify-between items-center border-b border-white/[0.05] pb-3">
+              <h3 className="text-xs font-bold text-white uppercase tracking-widest font-mono">
+                TACTICAL UP-NEXT & ALLOCATED MISSIONS
               </h3>
-              <span className="text-[10px] font-mono text-zinc-500">Sorted by Due Date</span>
+              <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest">ORDER_BY: DEADLINE_SEQUENCE</span>
             </div>
 
             <div className="space-y-2.5">
               {upcomingTasks.length === 0 ? (
-                <div className="p-8 text-center text-zinc-500 border border-dashed border-[#262626] rounded-xl">
-                  <p className="text-xs">Great job! No upcoming pending tasks.</p>
+                <div className="p-8 text-center text-zinc-500 border border-dashed border-white/[0.08] rounded-sm font-mono">
+                  <p className="text-xs">[ALL CLEAR] No upcoming pending tasks.</p>
                 </div>
               ) : (
                 upcomingTasks.map(t => (
                   <div 
                     key={t.id} 
                     onClick={() => onSelectTask(t.id)}
-                    className="flex justify-between items-center p-3 bg-[#0b0b0b] border border-[#262626] rounded-md hover:border-[#333] transition-all cursor-pointer hover:bg-[#1a1a1a]"
+                    className={`flex justify-between items-center p-3.5 bg-black/35 border ${colors.border} rounded-sm hover:border-neutral-500 transition-all cursor-pointer hover:bg-white/[0.01]`}
                   >
                     <div className="min-w-0">
-                      <p className="text-xs font-semibold text-white truncate leading-snug">{t.title}</p>
-                      <div className="flex items-center gap-3 text-[10px] text-zinc-500 font-mono mt-1">
-                        <span>ID: {t.id}</span>
+                      <p className="text-xs font-mono font-bold text-white uppercase tracking-wide truncate leading-snug">{t.title}</p>
+                      <div className="flex items-center gap-3 text-[9px] text-zinc-500 font-mono mt-1 uppercase tracking-wider">
+                        <span>ID_TKT: {t.id}</span>
                         <span>•</span>
-                        <span className="flex items-center gap-1"><Calendar className="w-3 h-3 text-zinc-500" /> {t.dueDate}</span>
+                        <span className="flex items-center gap-1 text-zinc-400 font-bold"><Calendar className="w-3 h-3 text-zinc-500" /> TIMEFRAME: {t.dueDate}</span>
                       </div>
                     </div>
 
                     <div className="flex items-center gap-2 shrink-0">
-                      <span className={`text-[9px] font-mono uppercase px-2 py-0.5 rounded border ${
+                      <span className={`text-[8px] font-mono font-bold uppercase px-2 py-0.5 rounded-sm border ${
                         t.priority === TaskPriority.CRITICAL 
-                          ? "bg-red-950/20 text-red-400 border-red-900/30" 
+                          ? "bg-red-950/40 text-red-400 border-red-800/40" 
                           : t.priority === TaskPriority.HIGH 
-                          ? "bg-amber-950/20 text-amber-400 border-amber-900/30"
-                          : "bg-neutral-800 text-zinc-400 border-neutral-750"
+                          ? "bg-amber-950/40 text-amber-400 border-amber-850/40"
+                          : "bg-neutral-900 text-zinc-400 border-neutral-800"
                       }`}>
                         {t.priority}
                       </span>
-                      <span className="text-[10px] bg-blue-950/20 text-blue-400 border border-blue-900/30 px-2 py-0.5 rounded font-mono uppercase">
+                      <span className={`text-[8px] font-mono font-bold uppercase px-2 py-0.5 rounded-sm border ${
+                        t.status === TaskStatus.DONE 
+                          ? "bg-emerald-950/40 text-emerald-400 border-emerald-850" 
+                          : t.status === TaskStatus.IN_PROGRESS 
+                          ? "bg-yellow-950/40 text-yellow-400 border-yellow-800/40"
+                          : "bg-black/40 text-sky-400 border-sky-950"
+                      }`}>
                         {t.status}
                       </span>
                     </div>
@@ -274,52 +288,52 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
           </div>
 
           {/* Favorite Projects Tracker */}
-          <div className="bg-[#151515] border border-[#262626] rounded-xl p-5 shadow-sm space-y-4">
-            <div className="flex justify-between items-center">
-              <div className="flex items-center gap-2">
-                <Pin className="w-4 h-4 text-amber-500 shrink-0" />
-                <h3 className="text-xs font-bold text-white uppercase tracking-wider font-mono">Pinned Projects Track</h3>
+          <div className={`${colors.bgCard} border ${colors.border} ${RADIUS.md} p-5 ${SHADOWS.tactical} backdrop-blur-md space-y-4`}>
+            <div className="flex justify-between items-center border-b border-white/[0.05] pb-3">
+              <div className="flex items-center gap-2.5">
+                <Pin className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                <h3 className="text-xs font-bold text-white uppercase tracking-widest font-mono">PINNED SECTORS TRACK</h3>
               </div>
               <button 
                 onClick={() => onNavigateToView("projects")} 
-                className="text-xs text-blue-400 hover:text-blue-300 font-medium cursor-pointer"
+                className="text-[10px] font-mono font-bold tracking-wider text-[#8cb891] hover:text-white uppercase cursor-pointer"
               >
-                All Projects
+                [ALL SECTORS]
               </button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {favoriteProjects.length === 0 ? (
-                <p className="text-xs text-zinc-500 italic col-span-2">No projects pinned to dashboard favorites yet. Toggle stars in Catalog!</p>
+                <p className="text-[10px] font-mono uppercase text-zinc-500 col-span-2">No projects pinned to favorites. Star them in catalogs!</p>
               ) : (
                 favoriteProjects.map(proj => (
                   <div 
                     key={proj.id} 
-                    className="p-4 bg-[#0b0b0b] border border-[#262626] rounded-md hover:border-[#333] transition-all flex flex-col justify-between h-[120px]"
+                    className={`p-4.5 bg-black/35 border ${colors.border} rounded-sm hover:border-neutral-500 transition-all flex flex-col justify-between h-[130px]`}
                   >
                     <div className="flex justify-between items-start">
                       <div className="min-w-0">
                         <span 
-                          className="w-2 h-2 rounded-full inline-block mr-2" 
+                          className="w-1.5 h-1.5 rounded-full inline-block mr-1.5" 
                           style={{ backgroundColor: proj.color }}
                         />
-                        <span className="text-xs font-semibold text-white truncate">{proj.name}</span>
+                        <span className="text-xs font-mono font-bold text-white uppercase tracking-wide">{proj.name}</span>
                         <p className="text-[10px] text-zinc-500 truncate mt-1">{proj.description}</p>
                       </div>
-                      <span className="text-[9px] uppercase font-mono tracking-wider text-zinc-500 bg-[#1a1a1a] px-1.5 rounded border border-[#262626]">
+                      <span className="text-[8px] uppercase font-mono tracking-widest text-zinc-400 bg-neutral-900 px-2 py-0.5 rounded-sm border border-white/[0.04]">
                         {proj.template}
                       </span>
                     </div>
 
                     {/* Progress slider bar */}
                     <div className="space-y-1.5">
-                      <div className="flex justify-between text-[10px] font-mono">
-                        <span className="text-zinc-500">Progress metrics</span>
-                        <span className="text-white font-semibold">{proj.progress}%</span>
+                      <div className="flex justify-between text-[9px] font-mono">
+                        <span className="text-zinc-500 uppercase tracking-widest">MISSION LOAD</span>
+                        <span className="text-emerald-400 font-bold">[{proj.progress}%]</span>
                       </div>
-                      <div className="w-full bg-[#1a1a1a] rounded-full h-1">
+                      <div className="w-full bg-neutral-900 rounded-sm h-1.5 overflow-hidden">
                         <div 
-                          className="bg-blue-600 h-1 rounded-full transition-all duration-500" 
+                          className="bg-gradient-to-r from-emerald-800 to-emerald-500 h-1.5 rounded-sm transition-all duration-500" 
                           style={{ width: `${proj.progress}%` }}
                         />
                       </div>
@@ -336,48 +350,48 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
         <div className="xl:col-span-4 space-y-6">
           
           {/* Unread Notifications Feed widget */}
-          <div className="bg-[#151515] border border-[#262626] rounded-xl p-5 shadow-sm space-y-4">
-            <div className="flex justify-between items-center">
-              <div className="flex items-center gap-2">
-                <Bell className="w-4 h-4 text-blue-400 shrink-0" />
-                <h3 className="text-xs font-bold text-white uppercase tracking-wider font-mono">Notifications</h3>
+          <div className={`${colors.bgCard} border ${colors.border} ${RADIUS.md} p-5 ${SHADOWS.tactical} backdrop-blur-md space-y-4`}>
+            <div className="flex justify-between items-center border-b border-white/[0.05] pb-3">
+              <div className="flex items-center gap-2.5">
+                <Bell className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                <h3 className="text-xs font-bold text-white uppercase tracking-widest font-mono">ALERT SIGNALS</h3>
               </div>
               {notifications.some(n => !n.isRead) && (
                 <button 
                   onClick={markAllNotificationsAsRead}
-                  className="text-[10px] text-blue-400 hover:text-blue-300 font-medium cursor-pointer"
+                  className="text-[9px] font-mono font-bold uppercase tracking-wider text-emerald-400 hover:text-white cursor-pointer"
                 >
-                  Clear All
+                  [DISMISS_ALL]
                 </button>
               )}
             </div>
 
-            <div className="space-y-3 max-h-[220px] overflow-y-auto">
+            <div className="space-y-3 max-h-[220px] overflow-y-auto pr-1">
               {notifications.length === 0 ? (
-                <p className="text-xs text-zinc-500 italic">No notifications on record.</p>
+                <p className="text-[10px] font-mono uppercase text-zinc-500">No telemetry notifications received.</p>
               ) : (
                 notifications.map(n => (
                   <div 
                     key={n.id} 
-                    className={`p-3 rounded-md border text-xs relative ${
+                    className={`p-3 rounded-sm border text-[10px] font-mono relative ${
                       n.isRead 
-                        ? "bg-[#0b0b0b] border-[#262626] text-zinc-400" 
-                        : "bg-[#161d2f]/30 border-blue-900/20 text-white"
+                        ? `bg-black/20 border-white/[0.03] ${colors.textMuted}` 
+                        : "bg-emerald-950/20 border-emerald-900/40 text-white"
                      }`}
                   >
                     {!n.isRead && (
-                      <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse" />
+                      <span className="absolute top-2.5 right-2.5 w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
                     )}
-                    <p className="font-semibold pr-4 text-white">{n.title}</p>
-                    <p className="text-zinc-400 mt-1 text-[11px]">{n.description}</p>
-                    <div className="flex justify-between items-center mt-2.5 font-mono text-[9px] text-zinc-500">
+                    <p className="font-bold pr-4 uppercase tracking-wide text-neutral-100">{n.title}</p>
+                    <p className="text-zinc-500 mt-1 text-[10px] leading-relaxed lowercase font-sans">{n.description}</p>
+                    <div className="flex justify-between items-center mt-2 font-mono text-[8px] text-zinc-500 uppercase tracking-widest">
                       <span>{new Date(n.createdAt).toLocaleDateString()}</span>
                       {!n.isRead && (
                         <button 
                           onClick={() => markNotificationAsRead(n.id)}
-                          className="text-blue-400 hover:text-blue-300 cursor-pointer"
+                          className="text-emerald-400 hover:text-emerald-300 cursor-pointer font-bold"
                         >
-                          Mark read
+                          [MARK_READ]
                         </button>
                       )}
                     </div>
@@ -388,30 +402,30 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
           </div>
 
           {/* Combined Workspace Activity feed log */}
-          <div className="bg-[#151515] border border-[#262626] rounded-xl p-5 shadow-sm space-y-4">
-            <h3 className="text-xs font-bold text-white uppercase tracking-wider font-mono flex items-center gap-2">
-              <MessageSquare className="w-4 h-4 text-zinc-500" /> Workspace Activity Feed
+          <div className={`${colors.bgCard} border ${colors.border} ${RADIUS.md} p-5 ${SHADOWS.tactical} backdrop-blur-md space-y-4`}>
+            <h3 className="text-xs font-bold text-white uppercase tracking-widest font-mono flex items-center gap-2.5 border-b border-white/[0.05] pb-3">
+              <MessageSquare className="w-3.5 h-3.5 text-zinc-500" /> INTELLIGENCE LOG STREAM
             </h3>
 
             <div className="space-y-3 max-h-[350px] overflow-y-auto pr-1">
               {recentFeed.length === 0 ? (
-                <p className="text-xs text-zinc-500 italic">No recent comments or updates detected.</p>
+                <p className="text-[10px] font-mono uppercase text-zinc-500">No workspace activity logs found.</p>
               ) : (
                 recentFeed.map(feed => (
                   <div 
                     key={feed.id} 
                     onClick={() => onSelectTask(feed.taskId)}
-                    className="p-3 bg-[#0b0b0b] border border-[#262626] hover:border-[#333] transition-all rounded-md text-xs space-y-2 cursor-pointer hover:bg-[#1a1a1a]"
+                    className={`p-3.5 bg-black/40 border border-white/[0.03] hover:border-neutral-500 transition-all rounded-sm text-[10px] font-mono space-y-2.5 cursor-pointer hover:bg-white/[0.01]`}
                   >
-                    <div className="flex justify-between items-center text-[10px] font-mono text-zinc-500">
-                      <span className="uppercase text-zinc-400 font-medium">{feed.title}</span>
+                    <div className="flex justify-between items-center text-[8px] text-zinc-500 tracking-wider">
+                      <span className="font-bold text-emerald-400">[{feed.title}]</span>
                       <span>{new Date(feed.time).toLocaleDateString()}</span>
                     </div>
-                    <p className="text-zinc-300 italic text-[11px]">
+                    <p className="text-neutral-300 font-sans italic text-[10px] leading-relaxed">
                       "{feed.details}"
                     </p>
-                    <p className="text-[10px] font-mono text-blue-400 truncate mt-1">
-                      Ticket: {feed.taskTitle}
+                    <p className="text-[9px] text-[#8cb891] truncate uppercase tracking-wider">
+                      TACTICAL MISSION: {feed.taskTitle}
                     </p>
                   </div>
                 ))

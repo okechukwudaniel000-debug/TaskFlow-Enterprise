@@ -11,6 +11,8 @@ import {
 } from "lucide-react";
 import { useTaskFlow } from "../../contexts/TaskFlowContext";
 import { TaskStatus, TaskPriority, Task, Project } from "../../types";
+import { useMilitaryTheme } from "../../contexts/MilitaryThemeContext";
+import { RADIUS, SHADOWS, TYPOGRAPHY } from "../../utils/themeTokens";
 import { ListView } from "./views/ListView";
 import { CalendarView } from "./views/CalendarView";
 import { TimelineView } from "./views/TimelineView";
@@ -32,6 +34,8 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ onSelectTask, onOpenCr
     searchQuery, setSearchQuery,
     bulkUpdateTasks
   } = useTaskFlow();
+
+  const { colors, activeTheme } = useMilitaryTheme();
 
   // View type: kanban, list, calendar, timeline, gantt, workload
   const [viewType, setViewType] = useState<"kanban" | "list" | "calendar" | "timeline" | "gantt" | "workload">("kanban");
@@ -94,12 +98,12 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ onSelectTask, onOpenCr
 
   // Define Columns
   const COLUMNS = [
-    { id: TaskStatus.BACKLOG, title: "Backlog", color: "border-t-zinc-600 bg-[#0b0b0b]/40" },
-    { id: TaskStatus.TODO, title: "To Do", color: "border-t-blue-500 bg-[#0b0b0b]/40" },
-    { id: TaskStatus.IN_PROGRESS, title: "In Progress", color: "border-t-amber-500 bg-[#0b0b0b]/40" },
-    { id: TaskStatus.REVIEW, title: "Code Review", color: "border-t-purple-500 bg-[#0b0b0b]/40" },
-    { id: TaskStatus.TESTING, title: "QA Testing", color: "border-t-pink-500 bg-[#0b0b0b]/40" },
-    { id: TaskStatus.DONE, title: "Done", color: "border-t-emerald-500 bg-[#0b0b0b]/40" },
+    { id: TaskStatus.BACKLOG, title: "01 // BACKLOG", color: "border-t-zinc-700 bg-black/35" },
+    { id: TaskStatus.TODO, title: "02 // STAGED", color: "border-t-[#8cb891]/60 bg-black/35" },
+    { id: TaskStatus.IN_PROGRESS, title: "03 // IN ACTION", color: "border-t-yellow-600/60 bg-black/35" },
+    { id: TaskStatus.REVIEW, title: "04 // CODE RECON", color: "border-t-purple-600/60 bg-black/35" },
+    { id: TaskStatus.TESTING, title: "05 // QA TESTING", color: "border-t-pink-600/60 bg-black/35" },
+    { id: TaskStatus.DONE, title: "06 // CONCLUDED", color: "border-t-emerald-600 bg-black/35" },
   ];
 
   // Group tasks by status
@@ -119,17 +123,17 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ onSelectTask, onOpenCr
   }, [filteredTasks]);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5 relative z-10">
       
       {/* Top View Selector Tabs */}
-      <div className="flex flex-wrap items-center gap-1.5 border-b border-[#222222] pb-3">
+      <div className="flex flex-wrap items-center gap-1 border-b border-white/[0.05] pb-3">
         {[
-          { id: "kanban", label: "Kanban Board", icon: LayoutGrid },
-          { id: "list", label: "List View", icon: List },
-          { id: "calendar", label: "Calendar", icon: Calendar },
-          { id: "timeline", label: "Timeline", icon: Clock },
-          { id: "gantt", label: "Gantt Chart", icon: BarChart4 },
-          { id: "workload", label: "Workload Planner", icon: Users },
+          { id: "kanban", label: "KANBAN PANEL", icon: LayoutGrid },
+          { id: "list", label: "LOG INDEX", icon: List },
+          { id: "calendar", label: "CHRONO MAP", icon: Calendar },
+          { id: "timeline", label: "SOCIOMETRICS", icon: Clock },
+          { id: "gantt", label: "DEPLOYMENT SCHEDULER", icon: BarChart4 },
+          { id: "workload", label: "OPERATOR CAPACITY", icon: Users },
         ].map(tab => {
           const Icon = tab.icon;
           const isActive = viewType === tab.id;
@@ -137,13 +141,13 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ onSelectTask, onOpenCr
             <button
               key={tab.id}
               onClick={() => setViewType(tab.id as any)}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-sm text-[10px] font-mono font-bold tracking-widest transition-all duration-150 cursor-pointer border ${
                 isActive
-                  ? "bg-blue-600/15 text-blue-400 border border-blue-500/30 shadow-sm shadow-blue-500/5"
-                  : "bg-transparent text-zinc-400 border border-transparent hover:text-white hover:bg-[#151515]"
+                  ? "bg-white/[0.04] text-emerald-400 border-emerald-700/60 shadow-sm"
+                  : "bg-transparent text-zinc-400 border-transparent hover:text-white hover:bg-white/[0.01]"
               }`}
             >
-              <Icon className="w-4 h-4 shrink-0" />
+              <Icon className={`w-3.5 h-3.5 shrink-0 ${isActive ? "text-emerald-400 animate-pulse" : "text-zinc-500"}`} />
               <span>{tab.label}</span>
             </button>
           );
@@ -151,18 +155,18 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ onSelectTask, onOpenCr
       </div>
 
       {/* Board controls & Filter rail */}
-      <div className="bg-[#151515] border border-[#262626] p-4 rounded-xl flex flex-col gap-4 shadow-sm">
+      <div className={`${colors.bgCard} border ${colors.border} p-4.5 rounded-sm flex flex-col gap-4 ${SHADOWS.tactical} backdrop-blur-md`}>
         <div className="flex flex-col md:flex-row gap-3 items-center justify-between">
           
           {/* Direct Search Bar */}
           <div className="relative w-full md:w-80">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-500" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search boards (ID, title, tags...)"
-              className="w-full bg-[#0b0b0b] border border-[#262626] rounded-md pl-9 pr-4 py-1.5 text-xs text-white placeholder-zinc-600 focus:border-[#333]"
+              placeholder="FILTER BY CALLSIGN, ID OR KEYWORDS..."
+              className="w-full bg-black/40 border border-white/[0.05] rounded-sm pl-9 pr-4 py-2 text-[10px] font-mono font-bold uppercase tracking-wider text-white placeholder-neutral-600 outline-none focus:border-neutral-500"
             />
           </div>
 
@@ -173,25 +177,25 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ onSelectTask, onOpenCr
             <select
               value={filterPriority}
               onChange={(e) => setFilterPriority(e.target.value as TaskPriority | "ALL")}
-              className="bg-[#0b0b0b] border border-[#262626] text-xs text-zinc-400 rounded-md p-1.5 cursor-pointer focus:border-[#333] outline-none"
+              className="bg-black/40 border border-white/[0.05] text-[10px] font-mono font-bold uppercase tracking-wider text-zinc-400 rounded-sm p-2 cursor-pointer focus:border-neutral-500 outline-none"
             >
-              <option value="ALL">All Priorities</option>
-              <option value={TaskPriority.CRITICAL}>Critical</option>
-              <option value={TaskPriority.HIGH}>High</option>
-              <option value={TaskPriority.MEDIUM}>Medium</option>
-              <option value={TaskPriority.LOW}>Low</option>
-              <option value={TaskPriority.LOWEST}>Lowest</option>
+              <option value="ALL" className="bg-neutral-900">ALL THREAT LIMITS</option>
+              <option value={TaskPriority.CRITICAL} className="bg-neutral-900">CRITICAL</option>
+              <option value={TaskPriority.HIGH} className="bg-neutral-900">HIGH</option>
+              <option value={TaskPriority.MEDIUM} className="bg-neutral-900">MEDIUM</option>
+              <option value={TaskPriority.LOW} className="bg-neutral-900">LOW</option>
+              <option value={TaskPriority.LOWEST} className="bg-neutral-900">LOWEST</option>
             </select>
 
             {/* Filter Assignee */}
             <select
               value={filterAssignee}
               onChange={(e) => setFilterAssignee(e.target.value)}
-              className="bg-[#0b0b0b] border border-[#262626] text-xs text-zinc-400 rounded-md p-1.5 cursor-pointer focus:border-[#333] outline-none"
+              className="bg-black/40 border border-white/[0.05] text-[10px] font-mono font-bold uppercase tracking-wider text-zinc-400 rounded-sm p-2 cursor-pointer focus:border-neutral-500 outline-none"
             >
-              <option value="ALL">All Assignees</option>
+              <option value="ALL" className="bg-neutral-900">ALL COMMAND STAFF</option>
               {users.map(u => (
-                <option key={u.id} value={u.id}>{u.name}</option>
+                <option key={u.id} value={u.id} className="bg-neutral-900">{u.name.toUpperCase()}</option>
               ))}
             </select>
 
@@ -199,11 +203,11 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ onSelectTask, onOpenCr
             <select
               value={filterProject}
               onChange={(e) => setFilterProject(e.target.value)}
-              className="bg-[#0b0b0b] border border-[#262626] text-xs text-zinc-400 rounded-md p-1.5 cursor-pointer focus:border-[#333] outline-none"
+              className="bg-black/40 border border-white/[0.05] text-[10px] font-mono font-bold uppercase tracking-wider text-zinc-400 rounded-sm p-2 cursor-pointer focus:border-neutral-500 outline-none"
             >
-              <option value="ALL">All Projects</option>
+              <option value="ALL" className="bg-neutral-900">ALL MISSIONS</option>
               {projects.map(p => (
-                <option key={p.id} value={p.id}>{p.name}</option>
+                <option key={p.id} value={p.id} className="bg-neutral-900">{p.name.toUpperCase()}</option>
               ))}
             </select>
 
@@ -211,13 +215,13 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ onSelectTask, onOpenCr
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as any)}
-              className="bg-[#0b0b0b] border border-[#262626] text-xs text-zinc-400 rounded-md p-1.5 cursor-pointer focus:border-[#333] outline-none"
+              className="bg-black/40 border border-white/[0.05] text-[10px] font-mono font-bold uppercase tracking-wider text-zinc-400 rounded-sm p-2 cursor-pointer focus:border-neutral-500 outline-none"
             >
-              <option value="newest">Newest First</option>
-              <option value="oldest">Oldest First</option>
-              <option value="priority">Highest Priority</option>
-              <option value="dueDate">Due Date</option>
-              <option value="alphabetical">Alphabetical</option>
+              <option value="newest" className="bg-neutral-900">CHRONO: NEWEST</option>
+              <option value="oldest" className="bg-neutral-900">CHRONO: OLDEST</option>
+              <option value="priority" className="bg-neutral-900">THREAT CAPACITY</option>
+              <option value="dueDate" className="bg-neutral-900">TIME REMAINING</option>
+              <option value="alphabetical" className="bg-neutral-900">LEXICAL SEQUENCE</option>
             </select>
 
             {/* Bulk Mode toggler */}
@@ -226,14 +230,14 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ onSelectTask, onOpenCr
                 setBulkSelectMode(!bulkSelectMode);
                 setSelectedTaskIds([]);
               }}
-              className={`px-3 py-1.5 rounded-md border text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-all ${
+              className={`px-3 py-2 rounded-sm border text-[10px] font-mono font-bold uppercase tracking-wider flex items-center gap-1.5 cursor-pointer transition-all duration-150 ${
                 bulkSelectMode 
-                  ? "bg-amber-600 border-amber-500 text-white" 
-                  : "bg-[#0b0b0b] border-[#262626] text-zinc-400 hover:text-white hover:bg-[#1a1a1a]"
+                  ? "bg-amber-800 border-amber-600 text-amber-100" 
+                  : "bg-black/40 border-white/[0.05] text-zinc-400 hover:text-white hover:bg-white/[0.01]"
               }`}
             >
               <SlidersHorizontal className="w-3.5 h-3.5" />
-              <span>{bulkSelectMode ? "Cancel Bulk" : "Bulk Operations"}</span>
+              <span>{bulkSelectMode ? "ABORT BULK" : "BULK ALLOC"}</span>
             </button>
 
           </div>
@@ -241,30 +245,30 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ onSelectTask, onOpenCr
 
         {/* Bulk action row when active */}
         {bulkSelectMode && (
-          <div className="bg-[#0b0b0b] p-3 rounded-md border border-[#262626] flex flex-col sm:flex-row items-center justify-between gap-3">
-            <span className="text-xs text-zinc-400">
-              Selected <span className="font-bold text-amber-400">{selectedTaskIds.length}</span> sprint tasks
+          <div className="bg-black/40 p-3.5 rounded-sm border border-amber-700/40 flex flex-col sm:flex-row items-center justify-between gap-3 animate-pulse">
+            <span className="text-[10px] font-mono tracking-wider text-zinc-300 uppercase">
+              SELECTED OPERATIONS: <span className="font-bold text-amber-400">[{selectedTaskIds.length}]</span> TICKETS STAGED
             </span>
             <div className="flex items-center gap-2">
-              <span className="text-[10px] text-zinc-500 font-mono">MOVE TO:</span>
+              <span className="text-[9px] text-zinc-500 font-mono tracking-widest uppercase">REDIRECT VECTOR:</span>
               <select
                 value={bulkTargetStatus}
                 onChange={(e) => setBulkTargetStatus(e.target.value as TaskStatus)}
-                className="bg-[#151515] border border-[#262626] text-xs text-zinc-300 rounded p-1 outline-none"
+                className="bg-black/80 border border-white/[0.05] text-[10px] font-mono font-bold uppercase tracking-wider text-zinc-300 rounded-sm p-1.5 outline-none"
               >
-                <option value={TaskStatus.BACKLOG}>Backlog</option>
-                <option value={TaskStatus.TODO}>To Do</option>
-                <option value={TaskStatus.IN_PROGRESS}>In Progress</option>
-                <option value={TaskStatus.REVIEW}>Code Review</option>
-                <option value={TaskStatus.TESTING}>QA Testing</option>
-                <option value={TaskStatus.DONE}>Done</option>
+                <option value={TaskStatus.BACKLOG}>BACKLOG</option>
+                <option value={TaskStatus.TODO}>TODO</option>
+                <option value={TaskStatus.IN_PROGRESS}>IN PROGRESS</option>
+                <option value={TaskStatus.REVIEW}>CODE REVIEW</option>
+                <option value={TaskStatus.TESTING}>QA TESTING</option>
+                <option value={TaskStatus.DONE}>DONE</option>
               </select>
               <button
                 onClick={handleBulkMove}
                 disabled={selectedTaskIds.length === 0}
-                className="px-3 py-1 bg-amber-600 hover:bg-amber-500 disabled:opacity-50 text-white font-semibold rounded text-xs cursor-pointer"
+                className="px-4 py-1.5 bg-amber-800 hover:bg-amber-700 disabled:opacity-40 text-amber-100 font-mono font-bold uppercase tracking-wider rounded-sm text-[10px] cursor-pointer transition-all"
               >
-                Apply Move Action
+                EXECUTE DISPATCH
               </button>
             </div>
           </div>
@@ -284,23 +288,23 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ onSelectTask, onOpenCr
                   key={col.id}
                   onDragOver={handleDragOver}
                   onDrop={(e) => handleDrop(e, col.id)}
-                  className={`flex flex-col rounded-md border border-[#262626] p-3 h-full transition-all duration-200 select-none ${col.color} ${
+                  className={`flex flex-col rounded-sm border border-white/[0.04] p-3.5 h-full transition-all duration-200 select-none ${col.color} ${
                     isCollapsed ? "w-16 shrink-0" : "w-72 shrink-0"
                   }`}
                 >
                   {/* Column Header */}
-                  <div className="flex items-center justify-between mb-3 shrink-0">
+                  <div className="flex items-center justify-between mb-3.5 shrink-0 pb-2 border-b border-white/[0.02]">
                     <div className="flex items-center gap-2 min-w-0">
                       <button 
                         onClick={() => toggleColumnCollapse(col.id)}
-                        className="p-0.5 hover:bg-[#1a1a1a] rounded text-zinc-500 cursor-pointer"
+                        className="p-1 hover:bg-white/[0.02] rounded-sm text-zinc-500 cursor-pointer"
                       >
                         {isCollapsed ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
                       </button>
                       {!isCollapsed && (
                         <>
-                          <h4 className="text-xs font-bold text-white truncate uppercase tracking-wider">{col.title}</h4>
-                          <span className="text-[10px] bg-[#1a1a1a] border border-[#262626] px-1.5 py-0.5 rounded text-zinc-400 font-bold font-mono">
+                          <h4 className="text-[10px] font-mono font-bold text-white truncate tracking-wider uppercase">{col.title}</h4>
+                          <span className="text-[9px] bg-black/40 border border-white/[0.05] px-1.5 py-0.5 rounded-sm text-emerald-400 font-bold font-mono">
                             {columnTasks.length}
                           </span>
                         </>
@@ -310,9 +314,9 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ onSelectTask, onOpenCr
                     {!isCollapsed && (
                       <button 
                         onClick={() => onOpenCreateTask(col.id)}
-                        className="p-1 hover:bg-[#1a1a1a] rounded text-zinc-500 hover:text-white cursor-pointer"
+                        className="p-1 hover:bg-white/[0.02] rounded-sm text-zinc-500 hover:text-white cursor-pointer"
                       >
-                        <Plus className="w-4 h-4" />
+                        <Plus className="w-3.5 h-3.5" />
                       </button>
                     )}
                   </div>
@@ -320,20 +324,20 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ onSelectTask, onOpenCr
                   {/* Collapsed side banner style if collapsed */}
                   {isCollapsed ? (
                     <div className="flex-1 flex flex-col items-center justify-center gap-4 py-4">
-                      <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider rotate-90 origin-center whitespace-nowrap">
-                        {col.title}
+                      <span className="text-[9px] font-mono font-bold text-zinc-500 tracking-widest uppercase rotate-90 origin-center whitespace-nowrap">
+                        {col.title.replace(/\d+\s\/\/\s/, "")}
                       </span>
-                      <span className="text-[10px] bg-[#1a1a1a] border border-[#262626] px-1.5 rounded text-zinc-400 font-bold font-mono mt-2">
+                      <span className="text-[9px] bg-black/40 border border-white/[0.05] px-1.5 rounded-sm text-zinc-400 font-bold font-mono mt-2">
                         {columnTasks.length}
                       </span>
                     </div>
                   ) : (
                     // Scrollable cards list
-                    <div className="flex-1 overflow-y-auto space-y-2.5 pr-0.5">
+                    <div className="flex-1 overflow-y-auto space-y-2.5 pr-0.5 scrollbar-thin">
                       {columnTasks.length === 0 ? (
-                        <div className="border border-dashed border-[#262626] rounded-md p-6 text-center text-zinc-600 text-[11px] h-32 flex flex-col items-center justify-center gap-1">
-                          <Folder className="w-4 h-4" />
-                          <span>Empty Lane</span>
+                        <div className="border border-dashed border-white/[0.04] rounded-sm p-6 text-center text-zinc-600 text-[10px] font-mono h-32 flex flex-col items-center justify-center gap-1.5">
+                          <Folder className="w-4 h-4 text-zinc-700" />
+                          <span className="uppercase tracking-widest">[ZONE EMPTY]</span>
                         </div>
                       ) : (
                         columnTasks.map(t => {
@@ -352,23 +356,23 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ onSelectTask, onOpenCr
                                   onSelectTask(t.id);
                                 }
                               }}
-                              className={`p-3.5 rounded-md border transition-all duration-150 relative cursor-pointer group flex flex-col gap-3 ${
+                              className={`p-3.5 rounded-sm border transition-all duration-150 relative cursor-pointer group flex flex-col gap-3 ${
                                 isSelected
-                                  ? "bg-amber-950/25 border-amber-600 shadow-sm"
+                                  ? "bg-amber-950/20 border-amber-600/70 shadow-sm"
                                   : draggedTaskId === t.id
-                                  ? "opacity-40 bg-[#0b0b0b] border-[#262626]/40"
-                                  : "bg-[#151515] border-[#262626] hover:border-[#333] hover:bg-[#1a1a1a] shadow-sm"
+                                  ? "opacity-30 bg-black border-transparent"
+                                  : "bg-black/40 border-white/[0.03] hover:border-neutral-500 hover:bg-black/60 shadow"
                               }`}
                             >
                               {/* Drag handle dots hover-only */}
-                              <div className="absolute right-2.5 top-2.5 opacity-0 group-hover:opacity-60 transition-opacity text-zinc-500">
+                              <div className="absolute right-2.5 top-2.5 opacity-0 group-hover:opacity-40 transition-opacity text-zinc-500">
                                 <Move className="w-3.5 h-3.5" />
                               </div>
 
                               {/* Task meta row */}
                               <div className="flex items-center justify-between">
-                                <span className="text-[9px] font-bold text-zinc-500 font-mono tracking-wider">
-                                  {t.id}
+                                <span className="text-[8px] font-mono font-bold text-zinc-500 tracking-wider">
+                                  ID: {t.id}
                                 </span>
                                 
                                 {bulkSelectMode && (
@@ -376,27 +380,27 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ onSelectTask, onOpenCr
                                     type="checkbox"
                                     checked={isSelected}
                                     onChange={() => {}} // Swallowed for click wrapper
-                                    className="rounded bg-neutral-900 border-neutral-800 text-amber-500 focus:ring-0 w-3.5 h-3.5 cursor-pointer shrink-0"
+                                    className="rounded-sm bg-neutral-900 border-neutral-800 text-amber-500 focus:ring-0 w-3.5 h-3.5 cursor-pointer shrink-0"
                                   />
                                 )}
                               </div>
 
                               {/* Task Title */}
-                              <h5 className="text-xs font-semibold text-white leading-relaxed line-clamp-2">
+                              <h5 className="text-xs font-mono font-bold text-white uppercase tracking-wide leading-relaxed line-clamp-2">
                                 {t.title}
                               </h5>
 
                               {/* Subtask / checklist counter row */}
                               {(t.subtasks.length > 0 || t.checklist.length > 0) && (
-                                <div className="flex gap-2.5 items-center text-[10px] text-zinc-500">
+                                <div className="flex gap-2 items-center text-[9px] font-mono uppercase tracking-wider">
                                   {t.subtasks.length > 0 && (
-                                    <span className="flex items-center gap-1.5 bg-[#0b0b0b] border border-[#262626] px-1.5 py-0.5 rounded">
+                                    <span className="flex items-center gap-1 bg-[#1a221b]/40 border border-white/[0.02] px-1.5 py-0.5 rounded-sm text-zinc-400">
                                       <CheckSquare className="w-3 h-3 text-zinc-500" />
-                                      <span>{t.subtasks.filter(s => s.isCompleted).length}/{t.subtasks.length} Sub</span>
+                                      <span>{t.subtasks.filter(s => s.isCompleted).length}/{t.subtasks.length} SECS</span>
                                     </span>
                                   )}
                                   {t.checklist.length > 0 && (
-                                    <span className="flex items-center gap-1.5 bg-[#0b0b0b] border border-[#262626] px-1.5 py-0.5 rounded">
+                                    <span className="flex items-center gap-1 bg-[#1a221b]/40 border border-white/[0.02] px-1.5 py-0.5 rounded-sm text-[#76df91]">
                                       <CheckSquare className="w-3 h-3 text-emerald-500" />
                                       <span>{t.checklist.filter(i => i.isCompleted).length}/{t.checklist.length} QA</span>
                                     </span>
@@ -408,7 +412,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ onSelectTask, onOpenCr
                               {t.tags.length > 0 && (
                                 <div className="flex flex-wrap gap-1">
                                   {t.tags.slice(0, 3).map((tag, idx) => (
-                                    <span key={idx} className="text-[9px] bg-[#0b0b0b] border border-[#262626] px-1.5 py-0.5 rounded text-zinc-400 font-mono">
+                                    <span key={idx} className="text-[8px] bg-black/40 border border-white/[0.03] px-1.5 py-0.5 rounded-sm text-zinc-400 font-mono tracking-wider uppercase">
                                       {tag}
                                     </span>
                                   ))}
@@ -416,17 +420,17 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ onSelectTask, onOpenCr
                               )}
 
                               {/* Footer parameters row */}
-                              <div className="flex justify-between items-center pt-2.5 border-t border-[#262626] shrink-0">
+                              <div className="flex justify-between items-center pt-2.5 border-t border-white/[0.02] shrink-0">
                                 
                                 {/* Color-coded Priority Badge */}
-                                <span className={`text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border ${
+                                <span className={`text-[8px] font-mono font-bold uppercase tracking-widest px-1.5 py-0.5 rounded-sm border ${
                                   t.priority === TaskPriority.CRITICAL 
-                                    ? "bg-red-950/20 text-red-400 border-red-900/30" 
+                                    ? "bg-red-950/40 text-red-400 border-red-800/40" 
                                     : t.priority === TaskPriority.HIGH 
-                                    ? "bg-amber-950/20 text-amber-400 border-amber-900/30"
+                                    ? "bg-amber-950/40 text-amber-400 border-amber-850/40"
                                     : t.priority === TaskPriority.MEDIUM
-                                    ? "bg-blue-950/20 text-blue-400 border-blue-900/30"
-                                    : "bg-neutral-800 text-zinc-400 border-neutral-750"
+                                    ? "bg-sky-950/40 text-sky-400 border-sky-800/40"
+                                    : "bg-neutral-900 text-zinc-400 border-neutral-800"
                                 }`}>
                                   {t.priority}
                                 </span>
@@ -437,12 +441,12 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ onSelectTask, onOpenCr
                                     <img 
                                       src={taskAssignee.avatar} 
                                       alt={taskAssignee.name} 
-                                      title={`Assigned to ${taskAssignee.name}`}
-                                      className="w-5.5 h-5.5 rounded-full object-cover border border-[#262626]"
+                                      title={`Assigned callsign ${taskAssignee.name}`}
+                                      className="w-5 h-5 rounded-full object-cover border border-white/[0.06]"
                                       referrerPolicy="no-referrer"
                                     />
                                   ) : (
-                                    <div className="w-5.5 h-5.5 rounded-full bg-[#0b0b0b] flex items-center justify-center text-zinc-500 border border-[#262626] text-[9px] font-bold">
+                                    <div className="w-5 h-5 rounded-full bg-neutral-900 flex items-center justify-center text-zinc-500 border border-white/[0.03] text-[8px] font-mono font-bold">
                                       UA
                                     </div>
                                   )}

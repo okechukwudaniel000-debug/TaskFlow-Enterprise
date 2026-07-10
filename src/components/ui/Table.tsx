@@ -4,13 +4,16 @@
  */
 
 import React, { forwardRef } from "react";
+import { useMilitaryTheme } from "../../contexts/MilitaryThemeContext";
+import { RADIUS } from "../../utils/themeTokens";
 
 export const TableContainer = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className = "", children, ...props }, ref) => {
+    const { colors } = useMilitaryTheme();
     return (
       <div 
         ref={ref} 
-        className={`w-full overflow-x-auto rounded-lg border border-neutral-800 bg-black/20 scrollbar-thin ${className}`} 
+        className={`w-full overflow-x-auto border ${colors.border} bg-black/25 scrollbar-thin ${RADIUS.sm} ${className}`} 
         {...props}
       >
         {children}
@@ -39,10 +42,11 @@ Table.displayName = "Table";
 
 export const TableHeader = forwardRef<HTMLTableSectionElement, React.HTMLAttributes<HTMLTableSectionElement>>(
   ({ className = "", children, ...props }, ref) => {
+    const { colors } = useMilitaryTheme();
     return (
       <thead 
         ref={ref} 
-        className={`bg-[#111111] border-b border-neutral-800/80 font-mono text-[10px] tracking-wider text-zinc-500 uppercase font-bold shrink-0 ${className}`} 
+        className={`bg-white/[0.03] border-b ${colors.border} font-mono text-[9px] tracking-widest ${colors.textMuted} uppercase font-bold shrink-0 ${className}`} 
         {...props}
       >
         {children}
@@ -58,7 +62,7 @@ export const TableBody = forwardRef<HTMLTableSectionElement, React.HTMLAttribute
     return (
       <tbody 
         ref={ref} 
-        className={`divide-y divide-neutral-900 bg-transparent ${className}`} 
+        className="divide-y divide-white/[0.03] bg-transparent" 
         {...props}
       >
         {children}
@@ -74,7 +78,7 @@ export const TableRow = forwardRef<HTMLTableRowElement, React.HTMLAttributes<HTM
     return (
       <tr 
         ref={ref} 
-        className={`transition-colors hover:bg-neutral-950/40 ${className}`} 
+        className={`transition-colors hover:bg-white/[0.02] odd:bg-white/[0.005] ${className}`} 
         {...props}
       >
         {children}
@@ -90,7 +94,7 @@ export const TableHead = forwardRef<HTMLTableCellElement, React.ThHTMLAttributes
     return (
       <th 
         ref={ref} 
-        className={`px-4.5 py-3 font-semibold select-none ${className}`} 
+        className={`px-5 py-3 font-bold select-none ${className}`} 
         {...props}
       >
         {children}
@@ -106,7 +110,7 @@ export const TableCell = forwardRef<HTMLTableCellElement, React.TdHTMLAttributes
     return (
       <td 
         ref={ref} 
-        className={`px-4.5 py-3.5 align-middle truncate max-w-[280px] ${className}`} 
+        className={`px-5 py-3.5 align-middle truncate max-w-[280px] ${className}`} 
         {...props}
       >
         {children}

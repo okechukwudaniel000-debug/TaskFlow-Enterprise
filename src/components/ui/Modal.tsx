@@ -7,6 +7,8 @@ import React, { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "motion/react";
 import { X } from "lucide-react";
+import { useMilitaryTheme } from "../../contexts/MilitaryThemeContext";
+import { RADIUS, SHADOWS } from "../../utils/themeTokens";
 
 export interface ModalProps {
   isOpen: boolean;
@@ -25,6 +27,7 @@ export const Modal: React.FC<ModalProps> = ({
   children,
   footer,
 }) => {
+  const { colors } = useMilitaryTheme();
   const overlayRef = useRef<HTMLDivElement>(null);
   const previousActiveElement = useRef<HTMLElement | null>(null);
 
@@ -74,32 +77,32 @@ export const Modal: React.FC<ModalProps> = ({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={handleOverlayClick}
-            className="fixed inset-0 bg-black/80 backdrop-blur-sm"
+            className="fixed inset-0 bg-black/85 backdrop-blur-md"
           />
 
           {/* Modal Container */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 15 }}
+            initial={{ opacity: 0, scale: 0.97, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 15 }}
-            transition={{ type: "spring", duration: 0.35, bounce: 0.15 }}
+            exit={{ opacity: 0, scale: 0.97, y: 10 }}
+            transition={{ type: "spring", duration: 0.3, bounce: 0.1 }}
             role="dialog"
             aria-modal="true"
             aria-labelledby={title ? "modal-title" : undefined}
-            className={`w-full ${sizes[size]} bg-[#111111] border border-neutral-800 rounded-xl overflow-hidden shadow-2xl relative flex flex-col max-h-[85vh]`}
+            className={`w-full ${sizes[size]} ${colors.bgPanel} ${colors.border} ${RADIUS.md} border shadow-2xl relative flex flex-col max-h-[85vh]`}
           >
             {/* Header */}
-            <div className="px-5 py-4 border-b border-neutral-800/80 flex items-center justify-between bg-[#131313] shrink-0">
+            <div className="px-5 py-4 border-b border-white/[0.05] flex items-center justify-between bg-white/[0.02] shrink-0">
               {title ? (
-                <h3 id="modal-title" className="text-xs font-bold text-white tracking-tight font-sans">
-                  {title}
+                <h3 id="modal-title" className={`text-xs font-mono font-bold uppercase tracking-wider ${colors.textPrimary}`}>
+                  [MISSION CONTROL] {title}
                 </h3>
               ) : (
                 <div />
               )}
               <button
                 onClick={onClose}
-                className="p-1.5 hover:bg-neutral-800 text-zinc-400 hover:text-white rounded-md cursor-pointer transition-colors outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                className={`p-1.5 hover:bg-white/[0.05] ${colors.textMuted} hover:text-white rounded-sm cursor-pointer transition-colors outline-none focus-visible:ring-2 focus-visible:ring-emerald-500`}
                 aria-label="Close dialog"
               >
                 <X className="w-4 h-4" />
@@ -113,7 +116,7 @@ export const Modal: React.FC<ModalProps> = ({
 
             {/* Footer */}
             {footer && (
-              <div className="px-5 py-3.5 bg-neutral-900/60 border-t border-neutral-800/60 flex items-center justify-end gap-3 shrink-0">
+              <div className="px-5 py-3.5 bg-white/[0.01] border-t border-white/[0.05] flex items-center justify-end gap-3 shrink-0">
                 {footer}
               </div>
             )}

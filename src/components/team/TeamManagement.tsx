@@ -4,14 +4,17 @@
  */
 
 import React, { useState } from "react";
-import { Users, Mail, Plus, Shield, UserX, UserCheck, CheckCircle2 } from "lucide-react";
+import { Users, Mail, Plus, Shield, UserX } from "lucide-react";
 import { useTaskFlow } from "../../contexts/TaskFlowContext";
 import { UserRole } from "../../types";
+import { useMilitaryTheme } from "../../contexts/MilitaryThemeContext";
 
 export const TeamManagement: React.FC = () => {
   const { 
     currentWorkspace, inviteWorkspaceMember, removeWorkspaceMember, users, currentUser 
   } = useTaskFlow();
+
+  const { colors } = useMilitaryTheme();
 
   // Invite Form state
   const [inviteEmail, setInviteEmail] = useState("");
@@ -41,19 +44,20 @@ export const TeamManagement: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 font-mono relative z-10">
       
       {/* Dynamic Alerts */}
       {successMsg && (
-        <div className="p-4 bg-emerald-950/20 border border-emerald-900/30 text-xs text-emerald-200 rounded-md flex items-center gap-2.5">
-          <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+        <div className="p-4 bg-emerald-950/20 border border-emerald-800/40 text-[10px] text-emerald-200 rounded-sm flex items-center gap-2.5 uppercase font-bold tracking-wider">
+          <span className="text-emerald-400">[DISPATCH_OK]:</span>
           <span>{successMsg}</span>
         </div>
       )}
 
       {validationError && (
-        <div className="p-4 bg-red-950/20 border border-red-900/30 text-xs text-red-200 rounded-md">
-          {validationError}
+        <div className="p-4 bg-red-950/20 border border-red-800/40 text-[10px] text-red-200 rounded-sm uppercase font-bold tracking-wider">
+          <span className="text-red-400">[DISPATCH_FAIL]:</span>
+          <span>{validationError}</span>
         </div>
       )}
 
@@ -61,74 +65,74 @@ export const TeamManagement: React.FC = () => {
         
         {/* LEFT COLUMN: Invite Form (5 columns) */}
         <div className="lg:col-span-5 space-y-6">
-          <div className="bg-[#151515] border border-[#262626] rounded-xl p-5 shadow-sm space-y-4">
-            <div className="flex items-center gap-2 text-blue-400">
+          <div className={`bg-black/35 border ${colors.border} rounded-sm p-5 shadow-sm space-y-4`}>
+            <div className="flex items-center gap-2 text-emerald-400">
               <Plus className="w-4 h-4" />
-              <h3 className="text-xs font-bold uppercase tracking-wider font-mono">Invite Workspace Member</h3>
+              <h3 className="text-[10px] font-extrabold uppercase tracking-widest font-mono">[HQ SECURE] RECRUIT SECTOR OPERATOR</h3>
             </div>
 
             <form onSubmit={handleInvite} className="space-y-4">
               {/* Email */}
               <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
-                  <Mail className="w-3.5 h-3.5" /> Email Address
+                <label className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-1.5">
+                  <Mail className="w-3.5 h-3.5 text-zinc-500" /> SECURE EMAIL CONTACT
                 </label>
                 <input
                   type="email"
                   value={inviteEmail}
                   onChange={(e) => setInviteEmail(e.target.value)}
                   placeholder="collaborator@company.com"
-                  className="w-full bg-[#0b0b0b] border border-[#262626] rounded-md p-2.5 text-xs text-white outline-none focus:border-[#333]"
+                  className={`w-full bg-black/40 border ${colors.border} rounded-sm p-2.5 text-xs text-white outline-none focus:border-neutral-500 uppercase`}
                   required
                 />
               </div>
 
               {/* Role */}
               <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
-                  <Shield className="w-3.5 h-3.5" /> Workspace Role Permission
+                <label className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-1.5">
+                  <Shield className="w-3.5 h-3.5 text-zinc-500" /> SECURITY ROLE PERMISSION
                 </label>
                 <select
                   value={inviteRole}
                   onChange={(e) => setInviteRole(e.target.value as UserRole)}
-                  className="w-full bg-[#0b0b0b] border border-[#262626] rounded-md p-2 text-xs text-white cursor-pointer outline-none focus:border-[#333]"
+                  className={`w-full bg-black/40 border ${colors.border} rounded-sm p-2.5 text-xs text-white cursor-pointer outline-none focus:border-neutral-500 uppercase`}
                 >
-                  <option value={UserRole.ADMIN}>Admin (Full Control)</option>
-                  <option value={UserRole.MANAGER}>Manager (Create & Assign)</option>
-                  <option value={UserRole.MEMBER}>Member (Standard Sprint Tasks)</option>
-                  <option value={UserRole.GUEST}>Guest (Read & Comment Only)</option>
+                  <option value={UserRole.ADMIN} className="bg-neutral-900 text-white">ADMIN (FULL COMMAND CONTROL)</option>
+                  <option value={UserRole.MANAGER} className="bg-neutral-900 text-white">MANAGER (CREATE & DISPATCH)</option>
+                  <option value={UserRole.MEMBER} className="bg-neutral-900 text-white">MEMBER (STANDARD OPERATIONAL ASSIGNMENTS)</option>
+                  <option value={UserRole.GUEST} className="bg-neutral-900 text-white">GUEST (READ & COMMENT OBSERVER)</option>
                 </select>
               </div>
 
               {/* Submit */}
               <button
                 type="submit"
-                className="w-full py-2 bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs rounded-md cursor-pointer"
+                className="w-full py-2.5 bg-emerald-800 hover:bg-emerald-700 border border-emerald-600 text-white font-extrabold text-[10px] tracking-widest uppercase rounded-sm cursor-pointer transition-colors active:scale-95 shadow shadow-black"
               >
-                Send Workspace Invite
+                DISPATCH SECURITY INVITE
               </button>
             </form>
           </div>
 
-          <div className="bg-[#151515] border border-[#262626] p-4.5 rounded-md text-xs text-zinc-400 space-y-2">
-            <span className="font-extrabold text-white block font-mono text-[10px] uppercase tracking-wider">Permission Policy:</span>
-            <p>• <span className="font-bold text-zinc-300">Admins</span> have unrestricted access to billing, project archival, and user role updates.</p>
-            <p>• <span className="font-bold text-zinc-300">Managers</span> can draft projects, delete issues, and assign team tasks.</p>
-            <p>• <span className="font-bold text-zinc-300">Members</span> can execute active task status updates, post comments, and add subtasks.</p>
-            <p>• <span className="font-bold text-zinc-300">Guests</span> have observer permissions to review boards, log checklists, and participate in discussion comments.</p>
+          <div className={`bg-black/35 border ${colors.borderMuted} p-5 rounded-sm text-[9px] text-zinc-400 space-y-2 uppercase`}>
+            <span className="font-extrabold text-white block font-mono text-[10px] tracking-widest">TACTICAL PERMISSION POLICY:</span>
+            <p>• <span className="font-extrabold text-zinc-200">Admins</span> have unrestricted access to billing, project archival, and workspace permission controls.</p>
+            <p>• <span className="font-extrabold text-zinc-200">Managers</span> can draft project sectors, delete tasks, and assign team operators.</p>
+            <p>• <span className="font-extrabold text-zinc-200">Members</span> can execute active task updates, log comments, and add subtasks.</p>
+            <p>• <span className="font-extrabold text-zinc-200">Guests</span> have observer access to review dashboards, check logs, and post discussion updates.</p>
           </div>
         </div>
 
         {/* RIGHT COLUMN: Members List Grid (7 columns) */}
         <div className="lg:col-span-7 space-y-4">
-          <div className="bg-[#151515] border border-[#262626] rounded-xl p-5 shadow-sm space-y-4">
+          <div className={`bg-black/35 border ${colors.border} rounded-sm p-5 shadow-sm space-y-4`}>
             <div className="flex justify-between items-center">
-              <h3 className="text-xs font-bold text-white uppercase tracking-wider font-mono flex items-center gap-2">
-                <Users className="w-4 h-4 text-zinc-500" /> Workspace Directory ({workspaceMembers.length})
+              <h3 className="text-[10px] font-extrabold text-white uppercase tracking-widest font-mono flex items-center gap-2">
+                <Users className="w-4 h-4 text-zinc-500" /> ACTIVE WORKSPACE DIRECTORY ({workspaceMembers.length})
               </h3>
             </div>
 
-            <div className="space-y-3 max-h-[500px] overflow-y-auto">
+            <div className="space-y-3 max-h-[500px] overflow-y-auto scrollbar-thin">
               {workspaceMembers.map(member => {
                 const memberUser = users.find(u => u.id === member.userId);
                 if (!memberUser) return null;
@@ -138,7 +142,7 @@ export const TeamManagement: React.FC = () => {
                 return (
                   <div 
                     key={member.userId} 
-                    className="p-3.5 bg-[#0b0b0b] border border-[#262626] hover:border-[#333] hover:bg-[#1a1a1a] transition-all rounded-md flex items-center justify-between gap-4"
+                    className={`p-3.5 bg-black/40 border ${colors.border} hover:border-neutral-500 transition-all rounded-sm flex items-center justify-between gap-4`}
                   >
                     <div className="flex items-center gap-3.5 min-w-0">
                       {/* Avatar with dynamic online presence dot */}
@@ -146,32 +150,32 @@ export const TeamManagement: React.FC = () => {
                         <img 
                           src={memberUser.avatar} 
                           alt={memberUser.name} 
-                          className="w-10 h-10 rounded-full object-cover border border-[#262626]"
+                          className="w-10 h-10 rounded-full object-cover border border-white/[0.04]"
                           referrerPolicy="no-referrer"
                         />
                         {memberUser.isOnline && (
-                          <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 rounded-full ring-2 ring-[#0b0b0b]" />
+                          <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 rounded-full ring-2 ring-neutral-900" />
                         )}
                       </div>
 
                       <div className="min-w-0">
-                        <span className="text-xs font-semibold text-white block truncate">
-                          {memberUser.name} {isMe && <span className="text-[9px] text-blue-400 font-mono ml-1.5">(You)</span>}
+                        <span className="text-xs font-bold text-white block truncate uppercase tracking-wide">
+                          {memberUser.name} {isMe && <span className="text-[8px] text-emerald-400 font-mono ml-1.5 font-extrabold">[YOU]</span>}
                         </span>
-                        <span className="text-[11px] text-zinc-400 block truncate">{memberUser.email}</span>
+                        <span className="text-[10px] text-zinc-500 block truncate font-mono">{memberUser.email.toUpperCase()}</span>
                       </div>
                     </div>
 
                     <div className="flex items-center gap-3 shrink-0">
                       {/* Role Badge */}
-                      <span className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border ${
+                      <span className={`text-[8px] font-mono font-bold uppercase tracking-widest px-2 py-0.5 rounded-sm border ${
                         member.role === UserRole.ADMIN 
-                          ? "bg-blue-950/20 text-blue-400 border-blue-900/30" 
+                          ? "bg-sky-950/40 text-sky-400 border-sky-800/40" 
                           : member.role === UserRole.MANAGER 
-                          ? "bg-purple-950/20 text-purple-400 border-purple-900/30"
+                          ? "bg-purple-950/40 text-purple-400 border-purple-800/40"
                           : member.role === UserRole.MEMBER
-                          ? "bg-neutral-850 text-zinc-300 border-neutral-800"
-                          : "bg-neutral-900 text-zinc-500 border-neutral-850"
+                          ? "bg-neutral-900 text-zinc-300 border-neutral-800"
+                          : "bg-neutral-950 text-zinc-500 border-neutral-900"
                       }`}>
                         {member.role}
                       </span>
@@ -180,12 +184,12 @@ export const TeamManagement: React.FC = () => {
                       {!isMe && (
                         <button
                           onClick={() => {
-                            if (confirm(`Remove ${memberUser.name} from the workspace?`)) {
+                            if (confirm(`Remove operator "${memberUser.name}" from this command workspace?`)) {
                               removeWorkspaceMember(currentWorkspace!.id, member.userId);
                             }
                           }}
                           title="Revoke access"
-                          className="p-1 hover:bg-red-950/30 rounded text-zinc-500 hover:text-red-400 transition-colors cursor-pointer"
+                          className="p-1 hover:bg-red-950/20 rounded-sm text-zinc-500 hover:text-red-400 transition-colors cursor-pointer"
                         >
                           <UserX className="w-4 h-4" />
                         </button>
